@@ -84,8 +84,12 @@ body {
   background: rgba(0, 255, 65, 0.4);
 }
 
-/* Show touch controls only on touch devices */
-@media (hover: none) and (pointer: coarse) {
+/* Show touch controls on mobile screens */
+@media (max-width: 768px) {
   #touchControls { display: flex; }
   #btnStart      { display: block; }
+
+  #gameCanvas {
+    max-height: 50vh;
+  }
 }
