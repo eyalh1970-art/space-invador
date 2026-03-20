@@ -19,7 +19,7 @@ function loadImg(src) {
 const iranImg    = loadImg('iran.jpeg');
 const lebanonImg = loadImg('lebanon.jpeg');
 const sinuarImg  = loadImg('sinuar.jpeg');
-const katzImg    = loadImg('כץ.jpeg');
+const katzImg    = loadImg('katz.jpeg');
 const bibiImg    = loadImg('bibi.jpeg');
 
 // Fixed logical resolution
