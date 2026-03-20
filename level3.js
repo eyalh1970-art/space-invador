@@ -366,60 +366,122 @@ function endGame(result) {
 // ============================================================
 //  EXPLOSION
 // ============================================================
+const explosionDebris   = [];
+const shockwaves        = [];
+let   screenShake       = 0;
+
+function spawnFireBurst(cx, cy, count, speedMult) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = (Math.random() * 9 + 3) * speedMult;
+    explosionParticles.push({
+      x: cx + (Math.random() - 0.5) * 50,
+      y: cy + (Math.random() - 0.5) * 30,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 5,
+      size: Math.random() * 16 + 4,
+      color: ['#ff0000','#ff2200','#ff5500','#ff8800','#ffbb00','#ffee00','#ffffff'][Math.floor(Math.random() * 7)],
+      life: 1.0,
+      decay: Math.random() * 0.01 + 0.005,
+      gravity: 0.18,
+      type: 'fire',
+    });
+  }
+}
+
+function spawnDebris(cx, cy, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 12 + 4;
+    explosionDebris.push({
+      x: cx + (Math.random() - 0.5) * 40,
+      y: cy + (Math.random() - 0.5) * 20,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 6,
+      w: Math.random() * 10 + 4,
+      h: Math.random() * 6 + 3,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.3,
+      color: ['#333','#555','#888','#664400','#442200'][Math.floor(Math.random() * 5)],
+      life: 1.0,
+      decay: Math.random() * 0.008 + 0.004,
+      gravity: 0.25,
+    });
+  }
+}
+
+function spawnSmokePuff(cx, cy, count) {
+  for (let i = 0; i < count; i++) {
+    explosionSmoke.push({
+      x: cx + (Math.random() - 0.5) * 90,
+      y: cy + (Math.random() - 0.5) * 30,
+      vx: (Math.random() - 0.5) * 2.5,
+      vy: -(Math.random() * 2.5 + 0.6),
+      size: Math.random() * 32 + 18,
+      gray: Math.floor(Math.random() * 60 + 30),
+      life: 1.0,
+      decay: Math.random() * 0.003 + 0.0015,
+    });
+  }
+}
+
 function startExplosion() {
   gameState      = 'exploding';
   explosionTimer = 0;
   explosionParticles.length = 0;
   explosionSmoke.length     = 0;
+  explosionDebris.length    = 0;
+  shockwaves.length         = 0;
+  screenShake               = 30;
 
   const cx = facilityX + facilityW / 2;
   const cy = facilityY + facilityH / 2;
 
-  // Fire burst
-  for (let i = 0; i < 120; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 9 + 2;
-    explosionParticles.push({
-      x: cx + (Math.random() - 0.5) * 60,
-      y: cy + (Math.random() - 0.5) * 40,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 4,
-      size: Math.random() * 14 + 4,
-      color: ['#ff0000','#ff3300','#ff6600','#ff9900','#ffcc00','#ffffff'][Math.floor(Math.random() * 6)],
-      life: 1.0,
-      decay: Math.random() * 0.012 + 0.006,
-      gravity: 0.14,
-    });
-  }
-
-  // Initial smoke
-  for (let i = 0; i < 60; i++) {
-    explosionSmoke.push({
-      x: cx + (Math.random() - 0.5) * 80,
-      y: cy + (Math.random() - 0.5) * 30,
-      vx: (Math.random() - 0.5) * 2,
-      vy: -(Math.random() * 2 + 0.5),
-      size: Math.random() * 28 + 14,
-      life: 1.0,
-      decay: Math.random() * 0.004 + 0.002,
-    });
-  }
-
-  // Shockwave
-  shockwave = { x: cx, y: cy, radius: 10, speed: 8, alpha: 1.0 };
+  // Main blast
+  spawnFireBurst(cx, cy, 160, 1.0);
+  spawnDebris(cx, cy, 60);
+  spawnSmokePuff(cx, cy, 80);
+  shockwaves.push({ x: cx, y: cy, radius: 8,  speed: 12, alpha: 1.0, width: 6 });
+  shockwaves.push({ x: cx, y: cy, radius: 4,  speed: 7,  alpha: 0.7, width: 3 });
 
   soundExplosion();
+
+  // Secondary explosions
+  setTimeout(() => {
+    spawnFireBurst(cx - 60, cy + 20, 80, 0.8);
+    spawnDebris(cx - 60, cy + 20, 30);
+    shockwaves.push({ x: cx - 60, y: cy + 20, radius: 5, speed: 9, alpha: 0.85, width: 4 });
+    screenShake = 20;
+    playNoise(0.7, 0.85); playTone(50, 'sawtooth', 0.9, 0.6, 160);
+  }, 400);
+
+  setTimeout(() => {
+    spawnFireBurst(cx + 50, cy - 10, 80, 0.8);
+    spawnDebris(cx + 50, cy - 10, 30);
+    shockwaves.push({ x: cx + 50, y: cy - 10, radius: 5, speed: 9, alpha: 0.85, width: 4 });
+    screenShake = 20;
+    playNoise(0.6, 0.75); playTone(45, 'sawtooth', 0.8, 0.5, 140);
+  }, 850);
+
+  setTimeout(() => {
+    spawnFireBurst(cx, cy - 30, 100, 1.2);
+    shockwaves.push({ x: cx, y: cy, radius: 6, speed: 14, alpha: 1.0, width: 7 });
+    screenShake = 25;
+    playNoise(1.0, 1.0); playTone(40, 'sine', 1.2, 0.7, 200);
+  }, 1300);
 }
 
 function updateExplosion() {
   explosionTimer++;
+  if (screenShake > 0) screenShake -= 2;
 
-  // Shockwave
-  if (shockwave) {
-    shockwave.radius += shockwave.speed;
-    shockwave.alpha  -= 0.02;
-    shockwave.speed  *= 0.96;
-    if (shockwave.alpha <= 0) shockwave = null;
+  // Shockwaves
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const sw = shockwaves[i];
+    sw.radius += sw.speed;
+    sw.alpha  -= 0.018;
+    sw.speed  *= 0.95;
+    if (sw.alpha <= 0) shockwaves.splice(i, 1);
   }
 
   // Fire particles
@@ -429,27 +491,41 @@ function updateExplosion() {
     p.y    += p.vy;
     p.vy   += p.gravity;
     p.vx   *= 0.97;
+    p.size *= 0.995;
     p.life -= p.decay;
     if (p.life <= 0) explosionParticles.splice(i, 1);
   }
 
-  // Keep spawning fire for first 2 seconds
-  if (explosionTimer < 120 && explosionTimer % 2 === 0) {
+  // Debris
+  for (let i = explosionDebris.length - 1; i >= 0; i--) {
+    const d = explosionDebris[i];
+    d.x     += d.vx;
+    d.y     += d.vy;
+    d.vy    += d.gravity;
+    d.vx    *= 0.98;
+    d.angle += d.spin;
+    d.life  -= d.decay;
+    if (d.life <= 0) explosionDebris.splice(i, 1);
+  }
+
+  // Keep spawning fire for first 2.5 seconds
+  if (explosionTimer < 150 && explosionTimer % 2 === 0) {
     const cx = facilityX + facilityW / 2;
     const cy = facilityY + facilityH / 2;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 6 + 1;
+      const speed = Math.random() * 7 + 1;
       explosionParticles.push({
-        x: cx + (Math.random() - 0.5) * 80,
-        y: cy + (Math.random() - 0.5) * 50,
+        x: cx + (Math.random() - 0.5) * 100,
+        y: cy + (Math.random() - 0.5) * 60,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed - 2,
-        size: Math.random() * 10 + 3,
-        color: ['#ff0000','#ff4400','#ff8800','#ffcc00'][Math.floor(Math.random() * 4)],
+        size: Math.random() * 12 + 3,
+        color: ['#ff0000','#ff4400','#ff8800','#ffcc00','#ff2200'][Math.floor(Math.random() * 5)],
         life: 1.0,
-        decay: Math.random() * 0.018 + 0.008,
-        gravity: 0.12,
+        decay: Math.random() * 0.016 + 0.007,
+        gravity: 0.13,
+        type: 'fire',
       });
     }
   }
@@ -785,18 +861,24 @@ function drawDamageDisplay() {
 }
 
 function drawExplosionScreen() {
+  // Screen shake
+  const shakeX = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
+  const shakeY = screenShake > 0 ? (Math.random() - 0.5) * screenShake : 0;
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
   ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
   drawStars();
   drawShields();
   drawEnemies();
   drawPlayer();
   drawHUD();
 
-  // Smoke (behind fire)
+  // Smoke (behind everything)
   for (const s of explosionSmoke) {
-    ctx.globalAlpha = s.life * 0.55;
-    const g = Math.floor(45 + s.life * 75);
+    ctx.globalAlpha = s.life * 0.6;
+    const g = s.gray || 50;
     ctx.fillStyle = `rgb(${g},${g},${g})`;
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
@@ -804,12 +886,24 @@ function drawExplosionScreen() {
   }
   ctx.globalAlpha = 1;
 
+  // Debris (dark fragments)
+  for (const d of explosionDebris) {
+    ctx.globalAlpha = d.life * 0.9;
+    ctx.fillStyle   = d.color;
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.angle);
+    ctx.fillRect(-d.w / 2, -d.h / 2, d.w, d.h);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
   // Fire particles
   for (const p of explosionParticles) {
-    ctx.globalAlpha = p.life;
+    ctx.globalAlpha = p.life * 0.92;
     ctx.fillStyle   = p.color;
     ctx.shadowColor = p.color;
-    ctx.shadowBlur  = 12;
+    ctx.shadowBlur  = p.size > 10 ? 18 : 10;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
@@ -817,25 +911,42 @@ function drawExplosionScreen() {
   ctx.shadowBlur  = 0;
   ctx.globalAlpha = 1;
 
-  // Shockwave ring
-  if (shockwave && shockwave.alpha > 0) {
-    ctx.globalAlpha = Math.max(0, shockwave.alpha);
+  // Multiple shockwave rings
+  for (const sw of shockwaves) {
+    if (sw.alpha <= 0) continue;
+    ctx.globalAlpha = Math.max(0, sw.alpha);
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth   = 5;
+    ctx.lineWidth   = sw.width || 4;
     ctx.beginPath();
-    ctx.arc(shockwave.x, shockwave.y, shockwave.radius, 0, Math.PI * 2);
+    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.lineWidth   = 1;
+    // Inner heat ring
+    ctx.strokeStyle = '#ffaa00';
+    ctx.lineWidth   = (sw.width || 4) * 0.5;
+    ctx.beginPath();
+    ctx.arc(sw.x, sw.y, sw.radius * 0.75, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.lineWidth   = 1;
+  ctx.globalAlpha = 1;
+
+  // Initial white flash
+  if (explosionTimer < 20) {
+    ctx.globalAlpha = (20 - explosionTimer) / 20 * 0.95;
+    ctx.fillStyle   = '#ffffff';
+    ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
     ctx.globalAlpha = 1;
   }
 
-  // Initial white flash
-  if (explosionTimer < 18) {
-    ctx.globalAlpha = (18 - explosionTimer) / 18 * 0.95;
-    ctx.fillStyle   = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Orange glow overlay during main explosion
+  if (explosionTimer < 60) {
+    ctx.globalAlpha = (60 - explosionTimer) / 60 * 0.25;
+    ctx.fillStyle   = '#ff4400';
+    ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
     ctx.globalAlpha = 1;
   }
+
+  ctx.restore();
 }
 
 function drawPlayer() {
