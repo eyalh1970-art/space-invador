@@ -1,5 +1,5 @@
 // ============================================================
-//  SPACE INVADERS  –  Pure HTML5 Canvas / Vanilla JS
+//  SPACE INVADERS – LEVEL 2: Strait of Hormuz
 // ============================================================
 
 const canvas = document.getElementById('gameCanvas');
@@ -16,22 +16,16 @@ function loadImg(src) {
   return img;
 }
 
-const iranImg    = loadImg('iran.jpeg');
-const lebanonImg = loadImg('lebanon.jpeg');
-const sinuarImg  = loadImg('sinuar.jpeg');
-const katzImg    = loadImg('katz.jpeg');
-const bibiImg    = loadImg('bibi.jpeg');
+const trumpImg = loadImg('trump.jpeg');
+const bibiImg  = loadImg('bibi.jpeg');
 
-// Fixed logical resolution
 canvas.width  = 800;
 canvas.height = 620;
 
-
 // ============================================================
-//  SOUND  (Web Audio API – no external files needed)
+//  SOUND
 // ============================================================
 let audioCtx = null;
-
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
@@ -39,8 +33,8 @@ function getAudioCtx() {
 
 function playTone(freq, type, duration, gainVal, startFreq) {
   try {
-    const ac  = getAudioCtx();
-    const osc = ac.createOscillator();
+    const ac   = getAudioCtx();
+    const osc  = ac.createOscillator();
     const gain = ac.createGain();
     osc.connect(gain);
     gain.connect(ac.destination);
@@ -56,10 +50,10 @@ function playTone(freq, type, duration, gainVal, startFreq) {
 
 function playNoise(duration, gainVal) {
   try {
-    const ac = getAudioCtx();
+    const ac     = getAudioCtx();
     const bufLen = Math.floor(ac.sampleRate * duration);
-    const buf  = ac.createBuffer(1, bufLen, ac.sampleRate);
-    const data = buf.getChannelData(0);
+    const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+    const data   = buf.getChannelData(0);
     for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
     const src  = ac.createBufferSource();
     src.buffer = buf;
@@ -72,27 +66,21 @@ function playNoise(duration, gainVal) {
   } catch (e) {}
 }
 
-function soundShoot()     { playTone(880, 'square',   0.08, 0.2); }
-function soundKill()      { playNoise(0.3, 0.5); playTone(180, 'sawtooth', 0.35, 0.35, 700); }
-function soundPlayerHit() { playTone(110, 'sawtooth', 0.55, 0.45); }
-function soundUFOAppear() { playTone(440, 'sine',     0.15, 0.15); }
+function soundShoot()       { playTone(880, 'square',   0.08, 0.2); }
+function soundKill()        { playNoise(0.3, 0.5); playTone(180, 'sawtooth', 0.35, 0.35, 700); }
+function soundPlayerHit()   { playTone(110, 'sawtooth', 0.55, 0.45); }
+function soundTrumpAppear() { playTone(330, 'sine', 0.25, 0.25); }
+function soundTrumpShoot()  { playTone(660, 'square', 0.1, 0.25); }
 function soundWin() {
-  // Festive fanfare melody
   const notes = [523, 523, 784, 784, 880, 880, 784, 698, 698, 659, 659, 587, 587, 523];
   const dur   = 0.18;
   notes.forEach((freq, i) => {
     setTimeout(() => playTone(freq, 'square', dur, 0.3), i * 190);
   });
-  // Tambourine-like noise hits
   [0, 380, 760, 1140, 1520].forEach(ms => {
     setTimeout(() => playNoise(0.08, 0.25), ms);
   });
 }
-
-function speakWin() {
-  speakHebrew('צאו מהמקלטים, הכל נגמר!', 0.35);
-}
-
 
 // ============================================================
 //  COLOURS
@@ -101,15 +89,14 @@ const C = {
   bg          : '#000011',
   player      : '#00ff41',
   playerBullet: '#00ff41',
-  enemy1      : '#ff6b6b',   // top row    (50 pts) – IRAN
-  enemy2      : '#ffd93d',   // middle rows(20 pts) – LEBANON
-  enemy3      : '#6bcb77',   // bottom rows(10 pts) – SINUAR
+  fighter     : '#00e5ff',   // top row    (50 pts)
+  cruiser     : '#ffd93d',   // middle rows(20 pts)
+  battleship  : '#ff6b6b',   // bottom rows(10 pts)
   enemyBullet : '#ff4444',
   shield      : '#4ecdc4',
-  ufo         : '#c77dff',
+  trump       : '#ff8c00',
   text        : '#00ff41',
 };
-
 
 // ============================================================
 //  GAME STATE
@@ -119,28 +106,20 @@ let score     = 0;
 let highScore = 0;
 let animId;
 
-// Intro overlay
 let introActive = false;
 let introTimer  = 0;
-const INTRO_DURATION = 300;  // 5 seconds at ~60 fps
+const INTRO_DURATION = 300;
 
-// כץ hit message
-let katzMsgTimer = 0;
-const KATZ_MSG_DURATION = 120; // 2 seconds
-
-// Kill effects (red circle + X, 1 second)
 const killEffects        = [];
 const KILL_EFFECT_FRAMES = 60;
 
-// Fiesta confetti & balloons
-const confetti  = [];
-const balloons  = [];
+const confetti        = [];
+const balloons        = [];
 const BALLOON_COLORS  = ['#ff4444','#ffd93d','#00ff41','#4ecdc4','#c77dff','#ff6b9d'];
 const CONFETTI_COLORS = ['#ff4444','#ffd93d','#ffffff','#4ecdc4','#c77dff','#ff6b9d','#6bcb77'];
 
-
 // ============================================================
-//  INPUT  (keyboard)
+//  INPUT
 // ============================================================
 const keys = { ArrowLeft: false, ArrowRight: false, Space: false };
 let   spaceJustPressed = false;
@@ -158,7 +137,6 @@ document.addEventListener('keyup', e => {
   if (e.code in keys) { e.preventDefault(); keys[e.code] = false; }
 });
 
-
 // ============================================================
 //  PLAYER
 // ============================================================
@@ -174,18 +152,18 @@ const player = {
   INV_DURATION   : 120,
 };
 
-
 // ============================================================
 //  BULLETS
 // ============================================================
 const playerBullets = [];
 const enemyBullets  = [];
+const trumpBullets  = [];   // Trump shoots DOWN at ships
 const PLAYER_BULLET_SPEED = 9;
 const ENEMY_BULLET_SPEED  = 4;
-
+const TRUMP_BULLET_SPEED  = 3;
 
 // ============================================================
-//  ENEMIES
+//  ENEMIES  (ships)
 // ============================================================
 const COLS = 11;
 const ROWS = 5;
@@ -194,8 +172,9 @@ const EH   = 28;
 const HGAP = 16;
 const VGAP = 18;
 
+// row 0 = top (FIGHTERS), rows 1-2 = CRUISERS, rows 3-4 = BATTLESHIPS
 const ROW_POINTS = [50, 20, 20, 10, 10];
-const ROW_LABELS = ['IRAN', 'LEBANON', 'LEBANON', 'SINUAR', 'SINUAR'];
+const ROW_LABELS = ['FIGHTER', 'CRUISER', 'CRUISER', 'BATTLESHIP', 'BATTLESHIP'];
 
 let enemies           = [];
 let enemyDir          = 1;
@@ -205,7 +184,6 @@ let enemyMoveInterval = 40;
 let enemyShootTimer   = 0;
 let enemyShootInterval = 60;
 
-
 // ============================================================
 //  SHIELDS
 // ============================================================
@@ -213,14 +191,14 @@ const SHIELD_COUNT = 4;
 const PX = 4;
 let shields = [];
 
-
 // ============================================================
-//  UFO
+//  TRUMP UFO
 // ============================================================
-let ufo      = null;
-let ufoTimer = 0;
-const UFO_INTERVAL = 700;
-
+let trump            = null;
+let trumpTimer       = 0;
+let trumpShootTimer  = 0;
+const TRUMP_INTERVAL       = 700;
+const TRUMP_SHOOT_INTERVAL = 100;  // one shot every 100 frames while on screen
 
 // ============================================================
 //  STARFIELD
@@ -232,9 +210,8 @@ const stars = Array.from({ length: 70 }, () => ({
   a: Math.random() * 0.6 + 0.3,
 }));
 
-
 // ============================================================
-//  SETUP HELPERS
+//  SETUP
 // ============================================================
 function createEnemies() {
   enemies = [];
@@ -261,9 +238,9 @@ function buildShieldPixels() {
     grid[r] = [];
     for (let c = 0; c < W; c++) {
       let solid = true;
-      if (r < 2 && c < 2)                       solid = false;
-      if (r < 2 && c >= W - 2)                  solid = false;
-      if (r >= H - 3 && c >= 4 && c <= W - 5)   solid = false;
+      if (r < 2 && c < 2)                     solid = false;
+      if (r < 2 && c >= W - 2)                solid = false;
+      if (r >= H - 3 && c >= 4 && c <= W - 5) solid = false;
       grid[r][c] = solid ? 1 : 0;
     }
   }
@@ -283,7 +260,9 @@ function createShields() {
   }
 }
 
-// Pre-load voices as soon as browser is ready
+// ============================================================
+//  HEBREW SPEECH
+// ============================================================
 let hebrewVoice = null;
 function loadHebrewVoice() {
   const voices = window.speechSynthesis.getVoices();
@@ -308,27 +287,18 @@ function speakHebrew(text, pitch) {
   } catch (e) {}
 }
 
-function speakAriHit() {
-  try {
-    window.speechSynthesis.cancel();
-    setTimeout(() => {
-      const utter  = new SpeechSynthesisUtterance('מה אתה עושה ביבי? אני רוצה מיץ!');
-      utter.lang   = 'he-IL';
-      utter.rate   = 0.95;
-      utter.pitch  = 1.4;
-      utter.volume = 1;
-      if (hebrewVoice) utter.voice = hebrewVoice;
-      window.speechSynthesis.speak(utter);
-    }, 100);
-  } catch (e) {}
-}
-
 function speakIntro() {
-  speakHebrew('אני מת על קפה ועדיף רותח!', 0.35);
+  speakHebrew('קדימה, משחררים את מיצרי הורמוז!', 0.35);
+}
+function speakWin() {
+  speakHebrew('עכשיו כולם יכולים לשוט בביטחה! שלב הבא, מטפלים בגרעין!', 0.35);
 }
 
+// ============================================================
+//  START / END
+// ============================================================
 function startGame() {
-  score  = 0;
+  score    = 0;
   player.x = canvas.width / 2;
   player.lives = 4;
   player.invincible      = false;
@@ -336,6 +306,7 @@ function startGame() {
 
   playerBullets.length = 0;
   enemyBullets.length  = 0;
+  trumpBullets.length  = 0;
   killEffects.length   = 0;
 
   enemyDir           = 1;
@@ -345,8 +316,9 @@ function startGame() {
   enemyShootTimer    = 0;
   enemyShootInterval = 60;
 
-  ufo      = null;
-  ufoTimer = 0;
+  trump           = null;
+  trumpTimer      = 0;
+  trumpShootTimer = 0;
 
   introActive = true;
   introTimer  = INTRO_DURATION;
@@ -360,9 +332,18 @@ function startGame() {
   gameLoop();
 }
 
+function endGame(state) {
+  gameState = state;
+  if (score > highScore) highScore = score;
+  if (state === 'win') {
+    soundWin();
+    speakWin();
+    spawnFiesta();
+  }
+}
 
 // ============================================================
-//  COLLISION  (AABB)
+//  COLLISION
 // ============================================================
 function aabb(a, b) {
   return a.x < b.x + b.w &&
@@ -371,23 +352,17 @@ function aabb(a, b) {
          a.y + a.h > b.y;
 }
 
-
 // ============================================================
 //  UPDATE
 // ============================================================
 function update() {
   if (gameState !== 'playing') return;
 
-  // Intro countdown
   if (introActive) {
     introTimer--;
     if (introTimer <= 0) introActive = false;
   }
 
-  // כץ message countdown
-  if (katzMsgTimer > 0) katzMsgTimer--;
-
-  // Kill-effect countdown
   for (let i = killEffects.length - 1; i >= 0; i--) {
     killEffects[i].timer--;
     if (killEffects[i].timer <= 0) killEffects.splice(i, 1);
@@ -398,7 +373,8 @@ function update() {
   updateEnemies();
   updateEnemyShooting();
   updateEnemyBullets();
-  updateUFO();
+  updateTrump();
+  updateTrumpBullets();
   checkEndConditions();
 }
 
@@ -448,12 +424,11 @@ function updatePlayerBullets() {
 
     if (checkBulletVsShield(b, playerBullets, i)) continue;
 
-    if (ufo && aabb(b, ufo)) {
-      score += ufo.points;
+    // Player shoots Trump = bonus points
+    if (trump && aabb(b, trump)) {
+      score += 150;
       soundKill();
-      speakAriHit();
-      katzMsgTimer = KATZ_MSG_DURATION;
-      ufo = null;
+      trump = null;
       playerBullets.splice(i, 1);
     }
   }
@@ -469,13 +444,69 @@ function updateEnemyBullets() {
     if (checkBulletVsShield(b, enemyBullets, i)) continue;
 
     if (!player.invincible) {
-      const pBox = {
-        x: player.x - player.w / 2, y: player.y - player.h / 2,
-        w: player.w, h: player.h,
-      };
+      const pBox = { x: player.x - player.w / 2, y: player.y - player.h / 2, w: player.w, h: player.h };
       if (aabb(b, pBox)) {
         enemyBullets.splice(i, 1);
         damagePlayer();
+      }
+    }
+  }
+}
+
+function updateTrump() {
+  trumpTimer++;
+  if (!trump && trumpTimer >= TRUMP_INTERVAL) {
+    trumpTimer      = 0;
+    trumpShootTimer = 0;
+    const left = Math.random() < 0.5;
+    trump = {
+      x: left ? -70 : canvas.width + 10,
+      y: 44, w: 60, h: 24,
+      speed : left ? 2.5 : -2.5,
+    };
+    soundTrumpAppear();
+  }
+  if (!trump) return;
+
+  trump.x += trump.speed;
+
+  // Trump fires one slow bullet at a time downward
+  trumpShootTimer++;
+  if (trumpShootTimer >= TRUMP_SHOOT_INTERVAL && trumpBullets.length === 0) {
+    const aliveShips = enemies.filter(e => e.alive);
+    if (aliveShips.length > 0) {
+      trumpShootTimer = 0;
+      soundTrumpShoot();
+      trumpBullets.push({
+        x: trump.x + trump.w / 2 - 2,
+        y: trump.y + trump.h,
+        w: 5, h: 14,
+      });
+    }
+  }
+
+  if (trump.x > canvas.width + 80 || trump.x + trump.w < -80) trump = null;
+}
+
+function updateTrumpBullets() {
+  for (let i = trumpBullets.length - 1; i >= 0; i--) {
+    const b = trumpBullets[i];
+    b.y += TRUMP_BULLET_SPEED;
+
+    if (b.y > canvas.height) { trumpBullets.splice(i, 1); continue; }
+
+    // Trump bullet hits ships → ship destroyed (no player points)
+    let hit = false;
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      if (aabb(b, e)) {
+        e.alive = false;
+        killEffects.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, timer: KILL_EFFECT_FRAMES });
+        soundKill();
+        trumpBullets.splice(i, 1);
+        speedUpEnemies();
+        hit = true;
+        break;
       }
     }
   }
@@ -494,7 +525,6 @@ function checkBulletVsShield(bullet, bulletsArray, idx) {
     const shW = sh.pixels[0].length * PX;
     const shH = sh.pixels.length    * PX;
     if (!aabb(bullet, { x: sh.x, y: sh.y, w: shW, h: shH })) continue;
-
     for (let r = 0; r < sh.pixels.length; r++) {
       for (let c = 0; c < sh.pixels[r].length; c++) {
         if (!sh.pixels[r][c]) continue;
@@ -568,30 +598,15 @@ function updateEnemyShooting() {
   enemyShootInterval = Math.max(25, enemyShootInterval - 0.4);
 }
 
-function updateUFO() {
-  ufoTimer++;
-  if (!ufo && ufoTimer >= UFO_INTERVAL) {
-    ufoTimer = 0;
-    const left = Math.random() < 0.5;
-    ufo = {
-      x: left ? -70 : canvas.width + 10,
-      y: 44, w: 60, h: 24,
-      speed : left ? 2.5 : -2.5,
-      points: 100,
-    };
-    soundUFOAppear();
-  }
-  if (!ufo) return;
-  ufo.x += ufo.speed;
-  if (ufo.x > canvas.width + 80 || ufo.x + ufo.w < -80) ufo = null;
-}
-
 function checkEndConditions() {
   const alive = enemies.filter(e => e.alive);
   if (alive.length === 0)                           { endGame('win');      return; }
   if (alive.some(e => e.y + e.h >= player.y - 20)) { endGame('gameover'); return; }
 }
 
+// ============================================================
+//  FIESTA
+// ============================================================
 function spawnFiesta() {
   confetti.length = 0;
   balloons.length = 0;
@@ -625,65 +640,90 @@ function updateFiesta() {
     c.y     += c.speed;
     c.x     += c.drift;
     c.angle += c.spin;
-    if (c.y > canvas.height + 20) {
-      c.y = -10;
-      c.x = Math.random() * canvas.width;
-    }
+    if (c.y > canvas.height + 20) { c.y = -10; c.x = Math.random() * canvas.width; }
   }
   for (const b of balloons) {
     b.y -= b.speed;
     b.x += b.drift;
-    if (b.y < -80) {
-      b.y = canvas.height + 60;
-      b.x = Math.random() * canvas.width;
-    }
+    if (b.y < -80) { b.y = canvas.height + 60; b.x = Math.random() * canvas.width; }
   }
 }
 
-function drawFiesta() {
-  // Confetti
-  for (const c of confetti) {
-    ctx.save();
-    ctx.translate(c.x, c.y);
-    ctx.rotate(c.angle);
-    ctx.fillStyle = c.color;
-    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
-    ctx.restore();
+// ============================================================
+//  SHIP DRAW FUNCTIONS
+// ============================================================
+
+// Row 0 – Small Fighter (cyan)
+function drawFighter(x, y, w, h, f) {
+  // Narrow body
+  ctx.fillRect(x + w/2 - 3, y + 2,   6,      h - 6);
+  ctx.fillRect(x + w/2 - 8, y + 8,   16,     h - 12);
+  // Wings
+  if (f === 0) {
+    ctx.fillRect(x,          y + h - 10, w/3,     7);
+    ctx.fillRect(x + 2*w/3,  y + h - 10, w/3,     7);
+  } else {
+    ctx.fillRect(x + 2,      y + h - 12, w/3,     7);
+    ctx.fillRect(x + 2*w/3 - 2, y + h - 12, w/3, 7);
   }
-  // Balloons
-  for (const b of balloons) {
-    ctx.fillStyle = b.color;
-    ctx.beginPath();
-    ctx.ellipse(b.x, b.y, b.r, b.r * 1.25, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Balloon knot
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y + b.r * 1.25);
-    ctx.lineTo(b.x - 3, b.y + b.r * 1.25 + 5);
-    ctx.lineTo(b.x + 3, b.y + b.r * 1.25 + 5);
-    ctx.closePath();
-    ctx.fill();
-    // String
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth   = 1;
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y + b.r * 1.25 + 5);
-    ctx.quadraticCurveTo(b.x + 10, b.y + b.r * 2 + 20, b.x, b.y + b.r * 2 + 40);
-    ctx.stroke();
-    ctx.lineWidth = 1;
-  }
+  // Cockpit window (dark)
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(x + w/2 - 2, y + 4,   4,      4);
 }
 
-function endGame(state) {
-  gameState = state;
-  if (score > highScore) highScore = score;
-  if (state === 'win') {
-    soundWin();
-    speakWin();
-    spawnFiesta();
+// Rows 1-2 – Medium Cruiser (yellow)
+function drawCruiser(x, y, w, h, f) {
+  // Main hull
+  ctx.fillRect(x + 4,  y + 4,  w - 8,  h - 6);
+  // Nose
+  ctx.fillRect(x + 10, y,      w - 20, 8);
+  // Side engines
+  if (f === 0) {
+    ctx.fillRect(x,          y + 6,  8, 12);
+    ctx.fillRect(x + w - 8,  y + 6,  8, 12);
+    ctx.fillRect(x + 2,      y + 18, 4,  6);
+    ctx.fillRect(x + w - 6,  y + 18, 4,  6);
+  } else {
+    ctx.fillRect(x - 2,       y + 8,  8, 12);
+    ctx.fillRect(x + w - 6,   y + 8,  8, 12);
+    ctx.fillRect(x,            y + 20, 4,  6);
+    ctx.fillRect(x + w - 4,   y + 20, 4,  6);
   }
+  // Windows
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(x + 10,     y + 6, 4, 4);
+  ctx.fillRect(x + w - 14, y + 6, 4, 4);
 }
 
+// Rows 3-4 – Large Battleship (red)
+function drawBattleship(x, y, w, h, f) {
+  // Main hull (wide and flat)
+  ctx.fillRect(x + 2,      y + h/2,  w - 4,  h/2);
+  // Superstructure
+  ctx.fillRect(x + 6,      y + 4,    w - 12, h/2);
+  // Bridge
+  ctx.fillRect(x + 12,     y,        w - 24, 8);
+  // Side gun turrets
+  ctx.fillRect(x,           y + h/2 + 2, 6,  8);
+  ctx.fillRect(x + w - 6,  y + h/2 + 2, 6,  8);
+  // Front gun barrels
+  ctx.fillRect(x + 10,     y + 2,    4, 6);
+  ctx.fillRect(x + w - 14, y + 2,    4, 6);
+  // Bridge windows
+  ctx.fillStyle = C.bg;
+  ctx.fillRect(x + 14,     y + 6, 4, 5);
+  ctx.fillRect(x + w - 18, y + 6, 4, 5);
+  // Engine glow (animated)
+  if (f === 0) {
+    ctx.fillStyle = '#ff4400';
+    ctx.fillRect(x + 8,      y + h - 4, 8, 4);
+    ctx.fillRect(x + w - 16, y + h - 4, 8, 4);
+  } else {
+    ctx.fillStyle = '#ff8800';
+    ctx.fillRect(x + 8,      y + h - 6, 8, 6);
+    ctx.fillRect(x + w - 16, y + h - 6, 8, 6);
+  }
+}
 
 // ============================================================
 //  DRAW
@@ -702,12 +742,12 @@ function draw() {
   drawKillEffects();
   drawPlayerBullets();
   drawEnemyBullets();
+  drawTrumpBullets();
   drawPlayer();
-  drawUFO();
+  drawTrump();
   drawHUD();
 
   if (introActive) drawIntroOverlay();
-  if (katzMsgTimer > 0) drawKatzMessage();
 }
 
 function drawStars() {
@@ -736,28 +776,19 @@ function drawPlayer() {
   }
 }
 
-function getEnemyImg(row) {
-  if (row === 0) return iranImg;
-  if (row <= 2)  return lebanonImg;
-  return sinuarImg;
-}
-
 function drawEnemies() {
   for (const e of enemies) {
     if (!e.alive) continue;
-    const img   = getEnemyImg(e.row);
-    const color = e.row === 0 ? C.enemy1 : e.row <= 2 ? C.enemy2 : C.enemy3;
+    let color;
+    if (e.row === 0)   color = C.fighter;
+    else if (e.row <= 2) color = C.cruiser;
+    else               color = C.battleship;
+
     ctx.fillStyle = color;
+    if (e.row === 0)      drawFighter   (e.x, e.y, e.w, e.h, e.animFrame);
+    else if (e.row <= 2)  drawCruiser   (e.x, e.y, e.w, e.h, e.animFrame);
+    else                  drawBattleship(e.x, e.y, e.w, e.h, e.animFrame);
 
-    if (img.loaded) {
-      ctx.drawImage(img, e.x - 10, e.y - 8, e.w + 20, e.h + 16);
-    } else {
-      if (e.row === 0)     drawSquid(e.x, e.y, e.w, e.h, e.animFrame);
-      else if (e.row <= 2) drawCrab (e.x, e.y, e.w, e.h, e.animFrame);
-      else                 drawOcto (e.x, e.y, e.w, e.h, e.animFrame);
-    }
-
-    // Label above each enemy
     ctx.font      = 'bold 7px "Courier New"';
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
@@ -775,12 +806,10 @@ function drawKillEffects() {
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth   = 4;
 
-    // Red circle
     ctx.beginPath();
     ctx.arc(ef.x, ef.y, radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // X inside
     const off = radius * 0.58;
     ctx.beginPath();
     ctx.moveTo(ef.x - off, ef.y - off);
@@ -794,97 +823,24 @@ function drawKillEffects() {
   }
 }
 
-function drawKatzMessage() {
-  const alpha = Math.min(1, katzMsgTimer / 20);
-  ctx.globalAlpha = alpha;
-  ctx.textAlign   = 'center';
-  ctx.font        = 'bold 32px "Courier New"';
-  ctx.fillStyle   = '#ff0000';
-  ctx.shadowColor = '#ff0000';
-  ctx.shadowBlur  = 18;
-  // Below the enemy grid (5 rows end around y=360)
-  ctx.fillText('ביבי בשבילי מיץ!', canvas.width / 2, 370);
-  ctx.shadowBlur  = 0;
-  ctx.globalAlpha = 1;
-}
-
 function drawIntroOverlay() {
   const progress = introTimer / INTRO_DURATION;
   const alpha    = progress > 0.15 ? 1 : progress / 0.15;
 
   ctx.globalAlpha = alpha * 0.88;
   ctx.fillStyle   = '#000011';
-  ctx.fillRect(0, canvas.height / 2 - 65, canvas.width, 110);
+  ctx.fillRect(0, canvas.height / 2 - 80, canvas.width, 140);
 
   ctx.globalAlpha = alpha;
   ctx.textAlign   = 'center';
-  ctx.font        = 'bold 38px "Courier New"';
+  ctx.font        = 'bold 32px "Courier New"';
   ctx.fillStyle   = '#ffd93d';
   ctx.shadowColor = '#ffd93d';
   ctx.shadowBlur  = 24;
-  ctx.fillText('אני מת על קפה ועדיף רותח!', canvas.width / 2, canvas.height / 2 + 14);
+  ctx.fillText('קדימה משחררים את', canvas.width / 2, canvas.height / 2 - 10);
+  ctx.fillText('מיצרי הורמוז!', canvas.width / 2, canvas.height / 2 + 38);
   ctx.shadowBlur  = 0;
   ctx.globalAlpha = 1;
-}
-
-// ============================================================
-//  FALLBACK SPRITE SHAPES
-// ============================================================
-function drawSquid(x, y, w, h, f) {
-  ctx.fillRect(x + 8,      y + 4,  w - 16, h - 8);
-  ctx.fillRect(x + 12,     y,      w - 24, 8);
-  if (f === 0) {
-    ctx.fillRect(x,          y + 12, 6, 8);
-    ctx.fillRect(x + w - 6,  y + 12, 6, 8);
-    ctx.fillRect(x + 10,     y + h - 4, 6, 6);
-    ctx.fillRect(x + w - 16, y + h - 4, 6, 6);
-  } else {
-    ctx.fillRect(x + 2,      y + 16, 6, 8);
-    ctx.fillRect(x + w - 8,  y + 16, 6, 8);
-    ctx.fillRect(x + 8,      y + h - 6, 6, 6);
-    ctx.fillRect(x + w - 14, y + h - 6, 6, 6);
-  }
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(x + 10,     y + 6, 4, 4);
-  ctx.fillRect(x + w - 14, y + 6, 4, 4);
-}
-
-function drawCrab(x, y, w, h, f) {
-  ctx.fillRect(x + 4,  y + 4, w - 8,  h - 8);
-  ctx.fillRect(x + 8,  y,     w - 16, 8);
-  if (f === 0) {
-    ctx.fillRect(x,          y + 6, 6, 10);
-    ctx.fillRect(x + w - 6,  y + 6, 6, 10);
-    ctx.fillRect(x + 2,      y + 2, 4, 4);
-    ctx.fillRect(x + w - 6,  y + 2, 4, 4);
-  } else {
-    ctx.fillRect(x - 2,      y + 8, 6, 10);
-    ctx.fillRect(x + w - 4,  y + 8, 6, 10);
-    ctx.fillRect(x,           y + 4, 4, 4);
-    ctx.fillRect(x + w - 4,  y + 4, 4, 4);
-  }
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(x + 9,      y + 6, 4, 4);
-  ctx.fillRect(x + w - 13, y + 6, 4, 4);
-}
-
-function drawOcto(x, y, w, h, f) {
-  ctx.fillRect(x + 6, y,     w - 12, h - 6);
-  ctx.fillRect(x + 2, y + 4, w - 4,  h - 10);
-  if (f === 0) {
-    ctx.fillRect(x,          y + h - 8, 6, 8);
-    ctx.fillRect(x + 10,     y + h - 4, 6, 4);
-    ctx.fillRect(x + w - 16, y + h - 4, 6, 4);
-    ctx.fillRect(x + w - 6,  y + h - 8, 6, 8);
-  } else {
-    ctx.fillRect(x + 2,      y + h - 6, 6, 6);
-    ctx.fillRect(x + 10,     y + h - 8, 6, 8);
-    ctx.fillRect(x + w - 16, y + h - 8, 6, 8);
-    ctx.fillRect(x + w - 8,  y + h - 6, 6, 6);
-  }
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(x + 10,     y + 6, 4, 5);
-  ctx.fillRect(x + w - 14, y + 6, 4, 5);
 }
 
 function drawShields() {
@@ -913,25 +869,35 @@ function drawEnemyBullets() {
   }
 }
 
-function drawUFO() {
-  if (!ufo) return;
-  if (katzImg.loaded) {
-    ctx.drawImage(katzImg, ufo.x, ufo.y - 6, ufo.w, ufo.h + 12);
-  } else {
-    ctx.fillStyle = C.ufo;
-    ctx.fillRect(ufo.x + 10, ufo.y + 8,  ufo.w - 20, ufo.h - 8);
-    ctx.fillRect(ufo.x + 4,  ufo.y + 4,  ufo.w - 8,  ufo.h - 4);
-    ctx.fillRect(ufo.x + 16, ufo.y,      ufo.w - 32, 8);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(ufo.x + 12, ufo.y + 10, 6, 6);
-    ctx.fillRect(ufo.x + 24, ufo.y + 10, 6, 6);
-    ctx.fillRect(ufo.x + 36, ufo.y + 10, 6, 6);
+function drawTrumpBullets() {
+  // Gold bullets going downward
+  ctx.fillStyle = '#ffd700';
+  for (const b of trumpBullets) {
+    ctx.fillRect(b.x,     b.y,     b.w, 5);
+    ctx.fillRect(b.x - 2, b.y + 5, b.w, 5);
+    ctx.fillRect(b.x + 2, b.y + 10, b.w, 4);
   }
-  // Label
+}
+
+function drawTrump() {
+  if (!trump) return;
+  if (trumpImg.loaded) {
+    ctx.drawImage(trumpImg, trump.x, trump.y - 6, trump.w, trump.h + 12);
+  } else {
+    // Fallback shape
+    ctx.fillStyle = C.trump;
+    ctx.fillRect(trump.x + 10, trump.y + 8,  trump.w - 20, trump.h - 8);
+    ctx.fillRect(trump.x + 4,  trump.y + 4,  trump.w - 8,  trump.h - 4);
+    ctx.fillRect(trump.x + 16, trump.y,      trump.w - 32, 8);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(trump.x + 12, trump.y + 10, 6, 6);
+    ctx.fillRect(trump.x + 24, trump.y + 10, 6, 6);
+    ctx.fillRect(trump.x + 36, trump.y + 10, 6, 6);
+  }
   ctx.font      = 'bold 8px "Courier New"';
-  ctx.fillStyle = C.ufo;
+  ctx.fillStyle = '#ffd700';
   ctx.textAlign = 'center';
-  ctx.fillText('כץ  100pts', ufo.x + ufo.w / 2, ufo.y - 8);
+  ctx.fillText('TRUMP  150pts', trump.x + trump.w / 2, trump.y - 8);
 }
 
 function drawHUD() {
@@ -958,54 +924,54 @@ function drawHUD() {
   ctx.fillRect(0, canvas.height - 40, canvas.width, 2);
 }
 
-
 // ============================================================
 //  SCREENS
 // ============================================================
 function drawStartScreen() {
   ctx.textAlign = 'center';
 
-  ctx.font        = 'bold 52px "Courier New"';
+  ctx.font        = 'bold 40px "Courier New"';
   ctx.shadowColor = C.text;
   ctx.shadowBlur  = 22;
   ctx.fillStyle   = C.text;
-  ctx.fillText('SPACE INVADERS', canvas.width / 2, 150);
+  ctx.fillText('STRAIT OF HORMUZ', canvas.width / 2, 110);
+
+  ctx.font        = 'bold 26px "Courier New"';
+  ctx.fillStyle   = '#ffd93d';
+  ctx.shadowColor = '#ffd93d';
+  ctx.fillText('מיצר הורמוז', canvas.width / 2, 155);
   ctx.shadowBlur  = 0;
 
-  const legendY = [230, 278, 326, 374];
-  const labels   = ['= 50 PTS  IRAN', '= 20 PTS  LEBANON', '= 10 PTS  SINUAR', '= 100 PTS  כץ'];
-  const colours  = [C.enemy1, C.enemy2, C.enemy3, C.ufo];
-  const imgs     = [iranImg, lebanonImg, sinuarImg, katzImg];
-  const drawFns  = [drawSquid, drawCrab, drawOcto, null];
+  // Ship legend
+  const legendY  = [230, 278, 326];
+  const labels   = ['= 50 PTS  FIGHTER', '= 20 PTS  CRUISER', '= 10 PTS  BATTLESHIP'];
+  const colours  = [C.fighter, C.cruiser, C.battleship];
+  const drawFns  = [drawFighter, drawCruiser, drawBattleship];
 
-  ctx.font = '18px "Courier New"';
-  for (let i = 0; i < 4; i++) {
-    const ix = canvas.width / 2 - 100;
-    const iy = legendY[i] - 24;
+  ctx.font = '16px "Courier New"';
+  for (let i = 0; i < 3; i++) {
+    const ix = canvas.width / 2 - 110;
+    const iy = legendY[i] - 22;
     ctx.fillStyle = colours[i];
-    if (imgs[i] && imgs[i].loaded) {
-      ctx.drawImage(imgs[i], ix - 8, iy - 6, 52, 40);
-    } else if (drawFns[i]) {
-      drawFns[i](ix, iy, 36, 28, 0);
-    } else {
-      ctx.fillRect(ix + 6,  iy + 8, 24, 12);
-      ctx.fillRect(ix + 2,  iy + 4, 32, 10);
-      ctx.fillRect(ix + 12, iy,     12, 6);
-    }
+    drawFns[i](ix, iy, 36, 28, 0);
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
-    ctx.fillText(labels[i], canvas.width / 2 - 50, legendY[i]);
+    ctx.fillText(labels[i], canvas.width / 2 - 60, legendY[i]);
   }
 
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = '#ffd700';
   ctx.textAlign = 'center';
+  ctx.font      = '15px "Courier New"';
+  ctx.fillText('TRUMP = 150 PTS  (also shoots ships!)', canvas.width / 2, 385);
+
+  ctx.fillStyle = '#888';
   ctx.font      = '16px "Courier New"';
-  ctx.fillText('← →  MOVE      SPACE  SHOOT', canvas.width / 2, 448);
+  ctx.fillText('← →  MOVE      SPACE  SHOOT', canvas.width / 2, 435);
 
   if (Math.floor(Date.now() / 550) % 2 === 0) {
     ctx.fillStyle = '#ffffff';
     ctx.font      = 'bold 22px "Courier New"';
-    ctx.fillText('PRESS  ENTER  /  TAP  TO  START', canvas.width / 2, 520);
+    ctx.fillText('PRESS  ENTER  /  TAP  TO  START', canvas.width / 2, 510);
   }
 }
 
@@ -1030,38 +996,66 @@ function drawGameOverScreen() {
   }
 }
 
+function drawFiesta() {
+  for (const c of confetti) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.angle);
+    ctx.fillStyle = c.color;
+    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+    ctx.restore();
+  }
+  for (const b of balloons) {
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.ellipse(b.x, b.y, b.r, b.r * 1.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y + b.r * 1.25);
+    ctx.lineTo(b.x - 3, b.y + b.r * 1.25 + 5);
+    ctx.lineTo(b.x + 3, b.y + b.r * 1.25 + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y + b.r * 1.25 + 5);
+    ctx.quadraticCurveTo(b.x + 10, b.y + b.r * 2 + 20, b.x, b.y + b.r * 2 + 40);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+}
+
 function drawWinScreen() {
   drawFiesta();
 
   ctx.textAlign   = 'center';
-
-  // Main big bold message
-  ctx.font        = 'bold 44px "Courier New"';
+  ctx.font        = 'bold 40px "Courier New"';
   ctx.fillStyle   = '#ffd93d';
   ctx.shadowColor = '#ffd93d';
   ctx.shadowBlur  = 30;
-  ctx.fillText('עכשיו כולם יכולים', canvas.width / 2, 220);
-  ctx.fillText('לצאת מהמקלטים!', canvas.width / 2, 290);
+  ctx.fillText('עכשיו כולם יכולים', canvas.width / 2, 190);
+  ctx.fillText('לשוט בביטחה!', canvas.width / 2, 250);
   ctx.shadowBlur  = 0;
 
-  ctx.font      = 'bold 20px "Courier New"';
+  ctx.font        = 'bold 30px "Courier New"';
+  ctx.fillStyle   = '#ff6b6b';
+  ctx.shadowColor = '#ff6b6b';
+  ctx.shadowBlur  = 20;
+  ctx.fillText('שלב הבא:', canvas.width / 2, 325);
+  ctx.fillText('מטפלים בגרעין!!!', canvas.width / 2, 370);
+  ctx.shadowBlur  = 0;
+
+  ctx.font      = 'bold 18px "Courier New"';
   ctx.fillStyle = C.text;
-  ctx.fillText(`SCORE: ${score}   HI: ${highScore}`, canvas.width / 2, 370);
+  ctx.fillText(`SCORE: ${score}   HI: ${highScore}`, canvas.width / 2, 430);
 
   if (Math.floor(Date.now() / 550) % 2 === 0) {
     ctx.fillStyle = '#ffffff';
     ctx.font      = 'bold 18px "Courier New"';
-    ctx.fillText('PRESS  ENTER  /  TAP  TO  PLAY  AGAIN', canvas.width / 2, 470);
+    ctx.fillText('PRESS  ENTER  /  TAP  TO  PLAY  AGAIN', canvas.width / 2, 500);
   }
-
-  ctx.fillStyle = '#ffd700';
-  ctx.font      = 'bold 20px "Courier New"';
-  ctx.fillText('▶  LEVEL 2: מיצר הורמוז', canvas.width / 2, 540);
-  ctx.font      = '14px "Courier New"';
-  ctx.fillStyle = '#aaa';
-  ctx.fillText('space-invador-pi.vercel.app/level2', canvas.width / 2, 565);
 }
-
 
 // ============================================================
 //  MAIN GAME LOOP
@@ -1071,7 +1065,6 @@ function gameLoop() {
   draw();
   animId = requestAnimationFrame(gameLoop);
 }
-
 
 // ============================================================
 //  MOBILE TOUCH CONTROLS
