@@ -561,10 +561,12 @@ function updatePlayerBullets() {
     // Hit nuclear facility
     const fBox = { x: facilityX, y: facilityY, w: facilityW, h: facilityH };
     if (aabb(b, fBox)) {
-      facilityDamage = Math.min(100, facilityDamage + 4);
+      facilityDamage = Math.min(100, facilityDamage + 1);
       damageDisplayTimer = DAMAGE_DISPLAY_DURATION;
       soundFacilityHit();
       playerBullets.splice(i, 1);
+      // Each hit doubles enemy fire rate (halves interval, min 5 frames)
+      enemyShootInterval = Math.max(5, Math.floor(enemyShootInterval / 2));
       if (facilityDamage >= 100) startExplosion();
     }
   }
