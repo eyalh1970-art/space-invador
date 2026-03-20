@@ -16,8 +16,11 @@ function loadImg(src) {
   return img;
 }
 
-const trumpImg = loadImg('trump.jpeg');
-const bibiImg  = loadImg('bibi.jpeg');
+const trumpImg  = loadImg('trump.jpeg');
+const bibiImg   = loadImg('bibi.jpeg');
+const sShipImg  = loadImg('S-Ship.jpeg');
+const mShipImg  = loadImg('M-ship.jpeg');
+const bShipImg  = loadImg('B-ship.jpeg');
 
 canvas.width  = 800;
 canvas.height = 620;
@@ -793,9 +796,16 @@ function drawEnemies() {
     else                 color = C.battleship;
 
     ctx.fillStyle = color;
-    if (e.row <= 1)       drawFighter   (e.x, e.y, e.w, e.h, e.animFrame);
-    else if (e.row <= 3)  drawCruiser   (e.x, e.y, e.w, e.h, e.animFrame);
-    else                  drawBattleship(e.x, e.y, e.w, e.h, e.animFrame);
+    if (e.row <= 1) {
+      if (sShipImg.loaded) ctx.drawImage(sShipImg, e.x - 8, e.y - 6, e.w + 16, e.h + 12);
+      else drawFighter(e.x, e.y, e.w, e.h, e.animFrame);
+    } else if (e.row <= 3) {
+      if (mShipImg.loaded) ctx.drawImage(mShipImg, e.x - 8, e.y - 6, e.w + 16, e.h + 12);
+      else drawCruiser(e.x, e.y, e.w, e.h, e.animFrame);
+    } else {
+      if (bShipImg.loaded) ctx.drawImage(bShipImg, e.x - 10, e.y - 8, e.w + 20, e.h + 16);
+      else drawBattleship(e.x, e.y, e.w, e.h, e.animFrame);
+    }
 
     ctx.font      = 'bold 7px "Courier New"';
     ctx.fillStyle = color;
@@ -954,6 +964,7 @@ function drawStartScreen() {
   const legendY  = [230, 278, 326];
   const labels   = ['= 50 PTS  FIGHTER', '= 20 PTS  CRUISER', '= 10 PTS  BATTLESHIP'];
   const colours  = [C.fighter, C.cruiser, C.battleship];
+  const imgs     = [sShipImg, mShipImg, bShipImg];
   const drawFns  = [drawFighter, drawCruiser, drawBattleship];
 
   ctx.font = '16px "Courier New"';
@@ -961,7 +972,8 @@ function drawStartScreen() {
     const ix = canvas.width / 2 - 110;
     const iy = legendY[i] - 22;
     ctx.fillStyle = colours[i];
-    drawFns[i](ix, iy, 36, 28, 0);
+    if (imgs[i] && imgs[i].loaded) ctx.drawImage(imgs[i], ix - 8, iy - 4, 52, 36);
+    else drawFns[i](ix, iy, 36, 28, 0);
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
     ctx.fillText(labels[i], canvas.width / 2 - 60, legendY[i]);
