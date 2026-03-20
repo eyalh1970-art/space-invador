@@ -290,6 +290,9 @@ function speakHebrew(text, pitch) {
 function speakIntro() {
   speakHebrew('קדימה, משחררים את מיצרי הורמוז!', 0.35);
 }
+function speakTrumpHit() {
+  speakHebrew('ביבי תתרכז באויב!', 0.6);
+}
 function speakWin() {
   speakHebrew('עכשיו כולם יכולים לשוט בביטחה! שלב הבא, מטפלים בגרעין!', 0.35);
 }
@@ -428,6 +431,7 @@ function updatePlayerBullets() {
     if (trump && aabb(b, trump)) {
       score += 150;
       soundKill();
+      speakTrumpHit();
       trump = null;
       playerBullets.splice(i, 1);
     }
