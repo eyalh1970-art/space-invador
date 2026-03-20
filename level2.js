@@ -172,9 +172,9 @@ const EH   = 28;
 const HGAP = 16;
 const VGAP = 18;
 
-// row 0 = top (FIGHTERS), rows 1-2 = CRUISERS, rows 3-4 = BATTLESHIPS
+// rows 0-1 = S-SHIP, rows 2-3 = M-SHIP, row 4 = B-SHIP
 const ROW_POINTS = [50, 20, 20, 10, 10];
-const ROW_LABELS = ['FIGHTER', 'CRUISER', 'CRUISER', 'BATTLESHIP', 'BATTLESHIP'];
+const ROW_LABELS = ['S-SHIP', 'S-SHIP', 'M-SHIP', 'M-SHIP', 'B-SHIP'];
 
 let enemies           = [];
 let enemyDir          = 1;
@@ -788,13 +788,13 @@ function drawEnemies() {
   for (const e of enemies) {
     if (!e.alive) continue;
     let color;
-    if (e.row === 0)   color = C.fighter;
-    else if (e.row <= 2) color = C.cruiser;
-    else               color = C.battleship;
+    if (e.row <= 1)      color = C.fighter;
+    else if (e.row <= 3) color = C.cruiser;
+    else                 color = C.battleship;
 
     ctx.fillStyle = color;
-    if (e.row === 0)      drawFighter   (e.x, e.y, e.w, e.h, e.animFrame);
-    else if (e.row <= 2)  drawCruiser   (e.x, e.y, e.w, e.h, e.animFrame);
+    if (e.row <= 1)       drawFighter   (e.x, e.y, e.w, e.h, e.animFrame);
+    else if (e.row <= 3)  drawCruiser   (e.x, e.y, e.w, e.h, e.animFrame);
     else                  drawBattleship(e.x, e.y, e.w, e.h, e.animFrame);
 
     ctx.font      = 'bold 7px "Courier New"';
@@ -952,7 +952,7 @@ function drawStartScreen() {
 
   // Ship legend
   const legendY  = [230, 278, 326];
-  const labels   = ['= 50 PTS  FIGHTER', '= 20 PTS  CRUISER', '= 10 PTS  BATTLESHIP'];
+  const labels   = ['= 50 PTS  S-SHIP', '= 20 PTS  M-SHIP', '= 10 PTS  B-SHIP'];
   const colours  = [C.fighter, C.cruiser, C.battleship];
   const drawFns  = [drawFighter, drawCruiser, drawBattleship];
 
