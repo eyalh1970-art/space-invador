@@ -1089,5 +1089,8 @@ btnShoot.addEventListener('touchend',   e => { e.preventDefault(); holdKey('Spac
 btnStart.addEventListener('touchstart', e => { e.preventDefault(); if (gameState !== 'playing') startGame(); }, { passive: false });
 btnStart.addEventListener('click',      () => { if (gameState !== 'playing') startGame(); });
 
+canvas.addEventListener('touchstart', e => { e.preventDefault(); if (gameState !== 'playing') startGame(); }, { passive: false });
+canvas.addEventListener('click',      () => { if (gameState !== 'playing') startGame(); });
+
 // Boot
 gameLoop();
