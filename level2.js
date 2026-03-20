@@ -172,9 +172,9 @@ const EH   = 28;
 const HGAP = 16;
 const VGAP = 18;
 
-// rows 0-1 = S-SHIP, rows 2-3 = M-SHIP, row 4 = B-SHIP
+// rows 0-1 = small, rows 2-3 = medium, row 4 = large
 const ROW_POINTS = [50, 20, 20, 10, 10];
-const ROW_LABELS = ['S-SHIP', 'S-SHIP', 'M-SHIP', 'M-SHIP', 'B-SHIP'];
+const ROW_LABELS = ['FIGHTER', 'FIGHTER', 'CRUISER', 'CRUISER', 'BATTLESHIP'];
 
 let enemies           = [];
 let enemyDir          = 1;
@@ -952,7 +952,7 @@ function drawStartScreen() {
 
   // Ship legend
   const legendY  = [230, 278, 326];
-  const labels   = ['= 50 PTS  S-SHIP', '= 20 PTS  M-SHIP', '= 10 PTS  B-SHIP'];
+  const labels   = ['= 50 PTS  FIGHTER', '= 20 PTS  CRUISER', '= 10 PTS  BATTLESHIP'];
   const colours  = [C.fighter, C.cruiser, C.battleship];
   const drawFns  = [drawFighter, drawCruiser, drawBattleship];
 
