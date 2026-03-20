@@ -301,6 +301,10 @@ function speakWin() {
 //  START / END
 // ============================================================
 function startGame() {
+  // Unlock AudioContext on mobile (requires user gesture)
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
   score    = 0;
   player.x = canvas.width / 2;
   player.lives = 4;
