@@ -16,11 +16,11 @@ function loadImg(src) {
   return img;
 }
 
-const iranImg    = loadImg('iran.jpeg');
-const lebanonImg = loadImg('lebanon.jpeg');
-const sinuarImg  = loadImg('sinuar.jpeg');
-const bibiImg    = loadImg('bibi.jpeg');
-const nuclearImg = loadImg('nuclear.png');
+const iranImg    = loadImg('haminahi.jpg');
+const lebanonImg = loadImg('nassrala2.jpg');
+const sinuarImg  = loadImg('sinuar2.jpg');
+const bibiImg    = loadImg('bibi2.jpg');
+const nuclearImg = loadImg('nuclear2.jpg');
 
 canvas.width  = 800;
 canvas.height = 620;
