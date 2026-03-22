@@ -3,22 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IDV – Space Invaders</title>
+  <title>IDV – Israel Defense Venture</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* D-pad layout (used for all levels; Up/Down hidden on non-sky) */
+    #moveButtons { display: none !important; }
+    #dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      grid-template-rows: repeat(3, 58px);
+      gap: 5px;
+    }
+    #dpad button {
+      background: rgba(0,255,65,0.15);
+      border: 2px solid #00ff41;
+      color: #00ff41;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    #dpad button:active { background: rgba(0,255,65,0.4); }
+    #dpadCenter { background: rgba(0,0,0,0.2); border-radius: 8px; }
+    #btnUp    { grid-column: 2; grid-row: 1; }
+    #btnLeft  { grid-column: 1; grid-row: 2; }
+    #dpadCenter { grid-column: 2; grid-row: 2; }
+    #btnRight { grid-column: 3; grid-row: 2; }
+    #btnDown  { grid-column: 2; grid-row: 3; }
+    .hide-ud #btnUp, .hide-ud #btnDown, .hide-ud #dpadCenter {
+      visibility: hidden;
+    }
+  </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
 
   <div id="touchControls">
-    <div id="moveButtons">
+    <div id="moveButtons"><!-- kept for style.css compatibility --></div>
+    <div id="dpad">
+      <button id="btnUp">&#8593;</button>
       <button id="btnLeft">&#8592;</button>
+      <div id="dpadCenter"></div>
       <button id="btnRight">&#8594;</button>
+      <button id="btnDown">&#8595;</button>
     </div>
     <button id="btnShoot">FIRE</button>
   </div>
 
   <button id="btnStart">TAP TO START</button>
 
-  <script src="IDV.js"></script>
+  <script>
+    window.IDV_CHAIN = true;
+
+    const _p   = new URLSearchParams(window.location.search);
+    const _lvl = _p.get('l') || '1';
+
+    // Sky level uses Up/Down; others don't need them visually
+    if (_lvl !== 'sky') {
+      document.getElementById('dpad').classList.add('hide-ud');
+    }
+
+    const _map = { '1': 'IDV1.js', 'sky': 'sky.js', '2': 'level2.js', '3': 'level3.js' };
+    const _s   = document.createElement('script');
+    _s.src     = (_map[_lvl] || 'IDV1.js') + '?idv=' + Date.now();
+    document.body.appendChild(_s);
+  </script>
 </body>
 </html>

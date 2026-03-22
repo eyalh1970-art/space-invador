@@ -853,9 +853,16 @@ function handleStart() {
     }, 200);
     return;
   }
-  if (gameState === 'gameover' || gameState === 'win') {
+  if (gameState === 'win') {
+    if (window.IDV_CHAIN) { location.href = 'IDV.html?l=2'; return; }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
-    voicesPlayed = false;       // reset so voices play again next round
+    voicesPlayed = false;
+    resetGame(); gameState = 'playing';
+    return;
+  }
+  if (gameState === 'gameover') {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    voicesPlayed = false;
     resetGame(); gameState = 'playing';
   }
 }

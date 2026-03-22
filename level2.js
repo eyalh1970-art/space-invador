@@ -304,6 +304,7 @@ function speakWin() {
 //  START / END
 // ============================================================
 function startGame() {
+  if (gameState === 'win' && window.IDV_CHAIN) { location.href = 'IDV.html?l=3'; return; }
   // Unlock AudioContext on mobile (requires user gesture)
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
