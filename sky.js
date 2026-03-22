@@ -116,6 +116,38 @@ function spawnBoom(cx, cy, big) {
 let gameState = 'start';
 let score     = 0;
 let frameCount = 0;
+let voicesPlayed = false;
+
+// ── SPEECH ────────────────────────────────────────────────────
+function playStartVoices() {
+  if (voicesPlayed || !window.speechSynthesis) return;
+  voicesPlayed = true;
+  window.speechSynthesis.cancel();
+
+  function speak() {
+    const voices = window.speechSynthesis.getVoices();
+
+    const trump = new SpeechSynthesisUtterance("Bibi, let's destroy these toys!");
+    trump.lang = 'en-US'; trump.rate = 0.82; trump.pitch = 0.72; trump.volume = 1;
+    const maleVoice = voices.find(v => v.lang.startsWith('en') && /david|mark|alex|male|guy|fred/i.test(v.name));
+    if (maleVoice) trump.voice = maleVoice;
+
+    const bibi = new SpeechSynthesisUtterance('אמרתי לך — צעצוע של נייר!');
+    bibi.lang = 'he-IL'; bibi.rate = 0.88; bibi.pitch = 1.1; bibi.volume = 1;
+    const heVoice = voices.find(v => v.lang.startsWith('he'));
+    if (heVoice) bibi.voice = heVoice;
+
+    window.speechSynthesis.speak(trump);
+    window.speechSynthesis.speak(bibi);
+  }
+
+  // Voices list may not be loaded yet on first call
+  if (window.speechSynthesis.getVoices().length > 0) {
+    speak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { speak(); window.speechSynthesis.onvoiceschanged = null; };
+  }
+}
 
 // ── INPUT ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
@@ -805,7 +837,16 @@ function drawWinScreen() {
 function handleStart() {
   if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  if (gameState === 'start' || gameState === 'gameover' || gameState === 'win') {
+  if (gameState === 'start') {
+    playStartVoices();          // speak on start screen tap
+    setTimeout(() => {          // short delay so speech begins before game starts
+      resetGame(); gameState = 'playing';
+    }, 200);
+    return;
+  }
+  if (gameState === 'gameover' || gameState === 'win') {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    voicesPlayed = false;       // reset so voices play again next round
     resetGame(); gameState = 'playing';
   }
 }
