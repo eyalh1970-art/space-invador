@@ -23,6 +23,12 @@ const mShipImg   = loadImg('M-ship.jpeg');
 const bShipImg   = loadImg('B-ship.jpeg');
 const trumpImg   = loadImg('trump2.jpg');     // Trump v2
 const nuclearImg = loadImg('nuclear.png');
+// ── SPLASH SCREEN IMAGES ────────────────────────────────────
+const bibi1Img  = loadImg('Bibi1.jpg');
+const trump1Img = loadImg('Trump1.jpg');
+const f35Img    = loadImg('F35.jpg');
+const f15Img    = loadImg('F15.jpg');
+const b1Img     = loadImg('B1.jpg');
 
 canvas.width  = 800;
 canvas.height = 620;
@@ -86,7 +92,7 @@ const C = {
 };
 
 // ── GAME STATE ───────────────────────────────────────────────
-let gameState    = 'start';
+let gameState    = 'splash';
 let currentLevel = 1;
 let score        = 0;
 let highScore    = 0;
@@ -155,6 +161,13 @@ const TRUMP_SHOOT_INTERVAL = 100;
 // ── SHIELDS ───────────────────────────────────────────────────
 const SHIELD_COUNT = 4, PX = 4;
 let shields = [];
+
+// ── SPLASH PLANES ─────────────────────────────────────────────
+const splashPlanes = [
+  { get img(){ return f35Img; }, x: -130, y: 162, speed: 3.2, w: 118, h: 46, dir:  1 },
+  { get img(){ return f15Img; }, x: -340, y: 216, speed: 2.4, w: 102, h: 40, dir:  1 },
+  { get img(){ return b1Img;  }, x:  940, y: 185, speed: 2.1, w: 155, h: 52, dir: -1 },
+];
 
 // ── STARFIELD ─────────────────────────────────────────────────
 const stars = Array.from({ length: 70 }, () => ({
@@ -236,6 +249,7 @@ function speakUFOHit() {
 
 // ── GAME FLOW ─────────────────────────────────────────────────
 function handleStart() {
+  if (gameState === 'splash') { gameState = 'start'; return; }
   if (gameState === 'start' || gameState === 'gameover') {
     currentLevel = 1; score = 0; startLevel();
   } else if (gameState === 'levelcomplete') {
@@ -546,6 +560,7 @@ function draw() {
   ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  if (gameState === 'splash')        { updateSplashPlanes(); drawSplashScreen(); return; }
   if (gameState === 'start')         { drawStartScreen();         return; }
   if (gameState === 'gameover')      { drawGameOverScreen();       return; }
   if (gameState === 'win')           { updateFiesta(); drawWinScreen(); return; }
@@ -876,3 +891,134 @@ canvas.addEventListener('touchstart', e=>{e.preventDefault();handleStart();},{pa
 canvas.addEventListener('click', ()=>handleStart());
 
 gameLoop();
+
+// ── SPLASH SCREEN ─────────────────────────────────────────────
+function updateSplashPlanes() {
+  for (const p of splashPlanes) {
+    p.x += p.speed * p.dir;
+    if (p.dir ===  1 && p.x > canvas.width + 220)  p.x = -220;
+    if (p.dir === -1 && p.x + p.w < -220)           p.x = canvas.width + 220;
+  }
+}
+
+function drawSplashScreen() {
+  const t = Date.now();
+  drawStars();
+
+  // ── Side portraits ──────────────────────────────────────────
+  const prtW = 200, prtH = 560, prtY = 30;
+
+  // Trump – left
+  if (trump1Img.loaded) {
+    ctx.save();
+    ctx.shadowColor = '#ff8c00'; ctx.shadowBlur = 40;
+    ctx.drawImage(trump1Img, 0, prtY, prtW, prtH);
+    ctx.shadowBlur = 0; ctx.restore();
+  }
+  // Bibi – right
+  if (bibi1Img.loaded) {
+    ctx.save();
+    ctx.shadowColor = '#00ff41'; ctx.shadowBlur = 40;
+    ctx.drawImage(bibi1Img, canvas.width - prtW, prtY, prtW, prtH);
+    ctx.shadowBlur = 0; ctx.restore();
+  }
+
+  // Gradient fade from sides into dark center
+  const lg = ctx.createLinearGradient(0, 0, 230, 0);
+  lg.addColorStop(0, 'rgba(0,0,17,0)');
+  lg.addColorStop(1, 'rgba(0,0,17,0.92)');
+  ctx.fillStyle = lg; ctx.fillRect(0, 0, 230, canvas.height);
+
+  const rg = ctx.createLinearGradient(570, 0, 800, 0);
+  rg.addColorStop(0, 'rgba(0,0,17,0.92)');
+  rg.addColorStop(1, 'rgba(0,0,17,0)');
+  ctx.fillStyle = rg; ctx.fillRect(570, 0, 230, canvas.height);
+
+  // ── Center title ────────────────────────────────────────────
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 82px "Courier New"';
+  ctx.fillStyle = '#00ff41'; ctx.shadowColor = '#00ff41'; ctx.shadowBlur = 50;
+  ctx.fillText('IDV', canvas.width / 2, 96);
+  ctx.shadowBlur = 0;
+  ctx.font = 'bold 15px "Courier New"'; ctx.fillStyle = '#ffd93d';
+  ctx.fillText('ISRAEL  DEFENSE  VENTURE', canvas.width / 2, 122);
+
+  // Thin separator line
+  ctx.strokeStyle = '#00ff4155'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(230, 134); ctx.lineTo(570, 134); ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // ── Aircraft ────────────────────────────────────────────────
+  for (const p of splashPlanes) {
+    if (!p.img || !p.img.loaded) continue;
+    // Engine afterburner glow
+    const glowX = p.dir === 1 ? p.x - 4 : p.x + p.w + 4;
+    ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 22;
+    ctx.fillStyle = 'rgba(60,160,255,0.55)';
+    ctx.beginPath(); ctx.ellipse(glowX, p.y + p.h / 2, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.save();
+    if (p.dir === -1) {
+      ctx.translate(p.x + p.w, p.y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(p.img, 0, 0, p.w, p.h);
+    } else {
+      ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+    }
+    ctx.restore();
+  }
+
+  // ── Hebrew main text ─────────────────────────────────────────
+  const pulse = Math.sin(t * 0.0018) * 0.12 + 0.88;
+  ctx.globalAlpha = pulse;
+  ctx.font = 'bold 40px "Courier New"';
+  ctx.fillStyle = '#ffd93d'; ctx.shadowColor = '#ffd93d'; ctx.shadowBlur = 38;
+  ctx.fillText('!משחררים את איראן', canvas.width / 2, 320);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  // ── Nuclear facility – TARGET ────────────────────────────────
+  const facW = 210, facH = 114;
+  const facX = canvas.width / 2 - facW / 2, facY = 358;
+
+  if (nuclearImg.loaded) ctx.drawImage(nuclearImg, facX, facY, facW, facH);
+  else { ctx.fillStyle = '#444'; ctx.fillRect(facX, facY, facW, facH); }
+
+  // Red pulsing damage overlay
+  const tgt = Math.sin(t * 0.004) * 0.5 + 0.5;
+  ctx.globalAlpha = tgt * 0.35;
+  ctx.fillStyle = '#ff2200'; ctx.fillRect(facX, facY, facW, facH);
+  ctx.globalAlpha = 1;
+
+  // Targeting reticle
+  const rcx = canvas.width / 2, rcy = facY + facH / 2, rr = 62;
+  ctx.strokeStyle = '#ff2200'; ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.65 + tgt * 0.35;
+  ctx.shadowColor = '#ff2200'; ctx.shadowBlur = 14;
+  ctx.beginPath(); ctx.arc(rcx, rcy, rr, 0, Math.PI * 2); ctx.stroke();
+  // inner circle
+  ctx.beginPath(); ctx.arc(rcx, rcy, rr * 0.45, 0, Math.PI * 2); ctx.stroke();
+  // crosshairs
+  ctx.beginPath();
+  ctx.moveTo(rcx - rr - 12, rcy); ctx.lineTo(rcx - rr + 22, rcy);
+  ctx.moveTo(rcx + rr - 22, rcy); ctx.lineTo(rcx + rr + 12, rcy);
+  ctx.moveTo(rcx, rcy - rr - 12); ctx.lineTo(rcx, rcy - rr + 22);
+  ctx.moveTo(rcx, rcy + rr - 22); ctx.lineTo(rcx, rcy + rr + 12);
+  ctx.stroke();
+  ctx.shadowBlur = 0; ctx.lineWidth = 1; ctx.globalAlpha = 1;
+
+  // TARGET label + ☢
+  ctx.font = 'bold 13px "Courier New"'; ctx.fillStyle = '#ff4444';
+  ctx.shadowColor = '#ff4444'; ctx.shadowBlur = 10;
+  ctx.fillText('☢  T A R G E T  ☢', canvas.width / 2, facY + facH + 20);
+  ctx.shadowBlur = 0;
+
+  // ── Tap to start ─────────────────────────────────────────────
+  if (Math.floor(t / 520) % 2 === 0) {
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 21px "Courier New"';
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12;
+    ctx.fillText('PRESS  ENTER  /  TAP  TO  ENTER', canvas.width / 2, 600);
+    ctx.shadowBlur = 0;
+  }
+}
