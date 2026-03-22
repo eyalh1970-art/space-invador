@@ -869,6 +869,8 @@ function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
 // ── MOBILE TOUCH ──────────────────────────────────────────────
 const btnLeft  = document.getElementById('btnLeft');
 const btnRight = document.getElementById('btnRight');
+const btnUp    = document.getElementById('btnUp');
+const btnDown  = document.getElementById('btnDown');
 const btnShoot = document.getElementById('btnShoot');
 const btnStart = document.getElementById('btnStart');
 function hold(k,v){ keys[k]=v; if(k==='Space'&&v) spaceJustPressed=true; }
@@ -876,6 +878,10 @@ btnLeft.addEventListener('touchstart',  e=>{e.preventDefault();hold('ArrowLeft',
 btnLeft.addEventListener('touchend',    e=>{e.preventDefault();hold('ArrowLeft',false);},{passive:false});
 btnRight.addEventListener('touchstart', e=>{e.preventDefault();hold('ArrowRight',true); },{passive:false});
 btnRight.addEventListener('touchend',   e=>{e.preventDefault();hold('ArrowRight',false);},{passive:false});
+btnUp.addEventListener('touchstart',    e=>{e.preventDefault();hold('ArrowUp',true); },{passive:false});
+btnUp.addEventListener('touchend',      e=>{e.preventDefault();hold('ArrowUp',false);},{passive:false});
+btnDown.addEventListener('touchstart',  e=>{e.preventDefault();hold('ArrowDown',true); },{passive:false});
+btnDown.addEventListener('touchend',    e=>{e.preventDefault();hold('ArrowDown',false);},{passive:false});
 btnShoot.addEventListener('touchstart', e=>{e.preventDefault();hold('Space',true); },{passive:false});
 btnShoot.addEventListener('touchend',   e=>{e.preventDefault();hold('Space',false);},{passive:false});
 btnStart.addEventListener('touchstart', e=>{e.preventDefault();handleStart();},{passive:false});

@@ -5,14 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sky Battle</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* D-pad override for sky.html */
+    #touchControls { align-items: center; }
+
+    #dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      grid-template-rows: repeat(3, 58px);
+      gap: 5px;
+    }
+    #dpad button {
+      background: rgba(0,255,65,0.15);
+      border: 2px solid #00ff41;
+      color: #00ff41;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    #dpad button:active { background: rgba(0,255,65,0.4); }
+    #dpadCenter { background: rgba(0,0,0,0.3); border-radius: 8px; }
+    #btnUp    { grid-column: 2; grid-row: 1; }
+    #btnLeft  { grid-column: 1; grid-row: 2; }
+    #dpadCenter { grid-column: 2; grid-row: 2; }
+    #btnRight { grid-column: 3; grid-row: 2; }
+    #btnDown  { grid-column: 2; grid-row: 3; }
+  </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
 
   <div id="touchControls">
-    <div id="moveButtons">
+    <div id="dpad">
+      <button id="btnUp">&#8593;</button>
       <button id="btnLeft">&#8592;</button>
+      <div id="dpadCenter"></div>
       <button id="btnRight">&#8594;</button>
+      <button id="btnDown">&#8595;</button>
     </div>
     <button id="btnShoot">FIRE</button>
   </div>
