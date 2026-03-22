@@ -147,20 +147,8 @@ function playStartVoices() {
     b.lang = 'he-IL'; b.rate = 0.82; b.pitch = 0.55; b.volume = 1;
     if (heVoice) b.voice = heVoice;
 
-    // Trump laughs (deep)
-    const tl = new SpeechSynthesisUtterance('Ha! Ha! Ha! Ha! Ha!');
-    tl.lang = 'en-US'; tl.rate = 0.72; tl.pitch = 0.50; tl.volume = 0.95;
-    if (enVoice) tl.voice = enVoice;
-
-    // Bibi laughs (deep Hebrew)
-    const bl = new SpeechSynthesisUtterance('הא! הא! הא! הא!');
-    bl.lang = 'he-IL'; bl.rate = 0.72; bl.pitch = 0.50; bl.volume = 0.95;
-    if (heVoice) bl.voice = heVoice;
-
     window.speechSynthesis.speak(t);
     window.speechSynthesis.speak(b);
-    window.speechSynthesis.speak(tl);
-    window.speechSynthesis.speak(bl);
   }
 
   if (window.speechSynthesis.getVoices().length > 0) {
