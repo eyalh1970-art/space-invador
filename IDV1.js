@@ -179,84 +179,93 @@ function stopSplashMusic() {
 function scheduleSplashMusic(t0) {
   if (!splashMusicOn) return;
   const ac = getAudioCtx();
-  // ── Cinematic Majestic Theme — Eb major, 80 BPM, 16 beats ──
-  const bpm = 80, b = 60 / bpm;  // slow & majestic
-  const BEATS = 16;
+  // ── Rocky-style fanfare — 136 BPM, 12 beats ──
+  const bpm = 136, b = 60 / bpm;
+  const BEATS = 12;
 
-  // ── Helpers ──────────────────────────────────────────────
-  function softPad(freq, start, dur, vol) {
-    const osc = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
-    osc.type = 'sine'; osc.frequency.value = freq;
-    lp.type = 'lowpass'; lp.frequency.value = 1200;
-    osc.connect(lp); lp.connect(g); g.connect(ac.destination);
+  function note(freq, start, dur, type, vol) {
+    if (freq <= 0) return;
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(g); g.connect(ac.destination);
     g.gain.setValueAtTime(0.001, start);
-    g.gain.linearRampToValueAtTime(vol, start + 0.5);
-    g.gain.setValueAtTime(vol, start + dur - 0.5);
-    g.gain.linearRampToValueAtTime(0.001, start + dur);
-    osc.start(start); osc.stop(start + dur + 0.1);
-  }
-
-  function melody(freq, start, dur, vol) {
-    const osc = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
-    osc.type = 'triangle'; osc.frequency.value = freq;
-    lp.type = 'lowpass'; lp.frequency.value = 2000;
-    osc.connect(lp); lp.connect(g); g.connect(ac.destination);
-    g.gain.setValueAtTime(0.001, start);
-    g.gain.linearRampToValueAtTime(vol, start + 0.12);
-    g.gain.setValueAtTime(vol, start + dur - 0.15);
+    g.gain.linearRampToValueAtTime(vol, start + 0.02);
+    g.gain.setValueAtTime(vol, start + dur - 0.05);
     g.gain.linearRampToValueAtTime(0.001, start + dur);
     osc.start(start); osc.stop(start + dur + 0.05);
   }
-
-  function pulse(t) {  // soft cinematic heartbeat
+  function kick(t) {
     const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = 'sine'; osc.frequency.value = 55;
-    osc.connect(g); g.connect(ac.destination);
-    g.gain.setValueAtTime(0.001, t);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.06);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
-    osc.start(t); osc.stop(t + 0.56);
+    osc.type = 'sine'; osc.connect(g); g.connect(ac.destination);
+    osc.frequency.setValueAtTime(165, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t + 0.22);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.start(t); osc.stop(t + 0.23);
+  }
+  function snare(t) {
+    const len = Math.floor(ac.sampleRate * 0.14);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = buf; src.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    src.start(t);
+  }
+  function hihat(t, vol) {
+    const len = Math.floor(ac.sampleRate * 0.04);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = 'highpass'; f.frequency.value = 7500;
+    src.buffer = buf; src.connect(f); f.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    src.start(t);
   }
 
-  // ── CHORD PADS — Eb major progression (cinematic, majestic) ──
-  // Eb(311,392,466) → Cm(261,311,392) → Ab(207,261,311) → Bb(233,293,349)
-  const prog = [
-    [311.13, 392.00, 466.16],   // Eb major
-    [261.63, 311.13, 392.00],   // C minor
-    [207.65, 261.63, 311.13],   // Ab major
-    [233.08, 293.66, 349.23],   // Bb major
-  ];
-  for (let i = 0; i < 4; i++) {
-    const t = t0 + i * 4 * b;
-    for (const f of prog[i]) softPad(f, t, 4.4 * b, 0.055);  // gentle chord pads
-    softPad(prog[i][1] * 2, t + 0.05, 4.2 * b, 0.030);        // upper shimmer
+  // ── DRUMS (12 beats = 3 bars) ──
+  for (let i = 0; i < BEATS; i++) {
+    const bt = t0 + i * b;
+    if (i % 4 === 0 || i % 4 === 2) kick(bt);
+    if (i % 4 === 1 || i % 4 === 3) snare(bt);
+    hihat(bt, 0.14); hihat(bt + b * 0.5, 0.09);
   }
 
-  // ── BASS PULSE (soft heartbeat every 2 beats) ────────────
-  for (let i = 0; i < BEATS; i += 2) pulse(t0 + i * b);
+  // ── BASS ──
+  const bassSeq = [130.81,0,130.81,0, 164.81,130.81,0,164.81, 196.00,0,196.00,0];
+  for (let i = 0; i < BEATS; i++) {
+    if (bassSeq[i] > 0) note(bassSeq[i], t0 + i * b, b * 0.78, 'sawtooth', 0.22);
+  }
 
-  // ── MELODY — gentle heroic line (triangle, quiet) ─────────
-  // Bar 1 (Eb): Eb5 → G5 (rising hope)
-  melody(622.25, t0 + 0.5*b, 1.8*b, 0.12);   // Eb5
-  melody(783.99, t0 + 2.5*b, 1.3*b, 0.11);   // G5
+  // ── MELODY: Rocky "Gonna Fly Now" fanfare ──
+  note(523.25, t0 + 0.00*b, 0.22*b, 'square', 0.32);
+  note(659.25, t0 + 0.25*b, 0.22*b, 'square', 0.32);
+  note(783.99, t0 + 0.50*b, 0.22*b, 'square', 0.32);
+  note(1046.50, t0 + 0.75*b, 1.70*b, 'square', 0.42);
+  note(880.00,  t0 + 2.75*b, 0.44*b, 'square', 0.30);
+  note(783.99,  t0 + 3.25*b, 0.60*b, 'square', 0.28);
 
-  // Bar 2 (Cm): G5 → F5 → Eb5 (answer)
-  melody(783.99, t0 + 4.5*b, 0.9*b, 0.11);   // G5
-  melody(698.46, t0 + 5.5*b, 0.9*b, 0.10);   // F5
-  melody(622.25, t0 + 6.5*b, 1.2*b, 0.11);   // Eb5
+  note(523.25, t0 + 4.00*b, 0.22*b, 'square', 0.34);
+  note(659.25, t0 + 4.25*b, 0.22*b, 'square', 0.34);
+  note(783.99, t0 + 4.50*b, 0.22*b, 'square', 0.34);
+  note(1046.50, t0 + 4.75*b, 2.00*b, 'square', 0.44);
+  note(880.00,  t0 + 7.00*b, 0.48*b, 'square', 0.32);
 
-  // Bar 3 (Ab): C5 → Bb4 → G4 (descent)
-  melody(523.25, t0 + 8.5*b, 0.9*b, 0.10);   // C5
-  melody(466.16, t0 + 9.5*b, 0.9*b, 0.09);   // Bb4
-  melody(392.00, t0 + 10.5*b, 1.2*b, 0.10);  // G4
+  note(880.00,  t0 +  8.00*b, 0.44*b, 'square', 0.34);
+  note(987.77,  t0 +  8.50*b, 0.44*b, 'square', 0.35);
+  note(1046.50, t0 +  9.00*b, 0.44*b, 'square', 0.37);
+  note(1174.66, t0 +  9.50*b, 0.44*b, 'square', 0.38);
+  note(1318.51, t0 + 10.00*b, 1.75*b, 'square', 0.44);
+  note(1046.50, t0 + 11.50*b, 0.38*b, 'square', 0.30);
 
-  // Bar 4 (Bb): Bb4 → C5 → Eb5 (resolve upward, ready to loop)
-  melody(466.16, t0 + 12.5*b, 0.9*b, 0.10);  // Bb4
-  melody(523.25, t0 + 13.5*b, 0.9*b, 0.11);  // C5
-  melody(622.25, t0 + 14.5*b, 1.3*b, 0.12);  // Eb5
+  // Harmony
+  note(261.63, t0 + 0.75*b, 1.70*b, 'sine', 0.14);
+  note(523.25, t0 + 4.75*b, 2.00*b, 'sine', 0.14);
+  note(659.25, t0 + 10.00*b, 1.75*b, 'sine', 0.14);
 
   const loopMs = BEATS * b * 1000;
-  splashMusicLoop = setTimeout(() => scheduleSplashMusic(ac.currentTime + 0.02), loopMs - 50);
+  splashMusicLoop = setTimeout(() => scheduleSplashMusic(ac.currentTime + 0.02), loopMs - 60);
 }
 
 // ── SPLASH PLANES ─────────────────────────────────────────────
