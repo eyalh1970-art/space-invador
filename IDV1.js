@@ -1092,7 +1092,7 @@ function drawSplashScreen() {
     ctx.fill();
 
     ctx.save();
-    if (p.dir === -1) {
+    if (p.dir === 1) {
       ctx.translate(p.x + p.w, p.y);
       ctx.scale(-1, 1);
       ctx.drawImage(p.img, 0, 0, p.w, p.h);
