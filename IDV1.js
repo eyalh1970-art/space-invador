@@ -1225,6 +1225,6 @@ function drawSplashScreen() {
   }
 
   // ── Copyright ────────────────────────────────────────────────
-  ctx.font = '10px "Courier New"'; ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.textAlign = 'center';
-  ctx.fillText('© 2025 IDV – Israel Defense Venture  |  All rights reserved', canvas.width / 2, 616);
+  ctx.font = '11px "Courier New"'; ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.textAlign = 'center';
+  ctx.fillText('© 2025 IDV – Israel Defense Venture  |  All rights reserved', canvas.width / 2, 612);
 }
