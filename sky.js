@@ -398,6 +398,44 @@ function drawClouds(front) {
   }
 }
 
+function drawIsraelFlag(x, y, w, h) {
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#0038b8';
+  ctx.fillRect(x, y,        w, h*0.22);
+  ctx.fillRect(x, y+h*0.78, w, h*0.22);
+  // Star of David
+  const cx = x+w/2, cy = y+h/2, r = h*0.27;
+  ctx.strokeStyle = '#0038b8'; ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy-r);
+  ctx.lineTo(cx+r*0.866, cy+r*0.5); ctx.lineTo(cx-r*0.866, cy+r*0.5);
+  ctx.closePath(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy+r);
+  ctx.lineTo(cx+r*0.866, cy-r*0.5); ctx.lineTo(cx-r*0.866, cy-r*0.5);
+  ctx.closePath(); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.5;
+  ctx.strokeRect(x,y,w,h); ctx.lineWidth=1;
+}
+
+function drawUSFlag(x, y, w, h) {
+  ctx.fillStyle='#b22234'; ctx.fillRect(x,y,w,h);
+  const sh = h/13;
+  ctx.fillStyle='#ffffff';
+  for (let i=1; i<13; i+=2) ctx.fillRect(x, y+i*sh, w, sh);
+  const cw=w*0.4, ch=h*(7/13);
+  ctx.fillStyle='#3c3b6e'; ctx.fillRect(x,y,cw,ch);
+  ctx.fillStyle='#ffffff';
+  for (let r=0; r<3; r++)
+    for (let c=0; c<4; c++) {
+      ctx.beginPath();
+      ctx.arc(x+cw*(c+0.5)/4, y+ch*(r+0.5)/3, 0.9, 0, Math.PI*2); ctx.fill();
+    }
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.5;
+  ctx.strokeRect(x,y,w,h); ctx.lineWidth=1;
+}
+
 function drawContrail(x1, y1, x2, y2, cr, cg, cb) {
   const tr = ctx.createLinearGradient(x1, y1, x2, y2);
   tr.addColorStop(0, `rgba(${cr},${cg},${cb},0.55)`);
@@ -433,6 +471,9 @@ function drawBibiPlane() {
     ctx.beginPath(); ctx.ellipse(bibi.x+bibi.w*0.38, bibi.y+bibi.h*0.38, 20, 20, 0,0,Math.PI*2); ctx.stroke();
     ctx.lineWidth = 1;
   }
+  // Israeli flag on fuselage
+  drawIsraelFlag(bibi.x+bibi.w*0.55, bibi.y+bibi.h*0.08, 22, 14);
+
   ctx.font = 'bold 9px "Courier New"'; ctx.textAlign = 'center';
   ctx.fillStyle = '#00ff41'; ctx.shadowColor = '#00ff41'; ctx.shadowBlur = 8;
   ctx.fillText('BIBI F-35', bibi.x+bibi.w/2, bibi.y-6);
@@ -459,6 +500,9 @@ function drawTrumpPlane() {
     ctx.beginPath(); ctx.ellipse(trump.x+trump.w*0.38, trump.y+trump.h*0.35, 19,19,0,0,Math.PI*2); ctx.stroke();
     ctx.lineWidth = 1;
   }
+  // US flag on fuselage
+  drawUSFlag(trump.x+trump.w*0.55, trump.y+trump.h*0.08, 22, 14);
+
   ctx.font = 'bold 9px "Courier New"'; ctx.textAlign = 'center';
   ctx.fillStyle = '#ffd700'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 8;
   ctx.fillText('TRUMP B-1', trump.x+trump.w/2, trump.y-6);
@@ -581,77 +625,127 @@ function drawStartScreen() {
   drawMoon();
   drawMountains();
 
+  // ── Main title in Hebrew ──
   ctx.textAlign='center';
-  ctx.font='bold 70px "Courier New"';
-  for (let b=28; b>=5; b-=5) {
+  ctx.font='bold 62px Arial';
+  for (let b=24; b>=5; b-=5) {
     ctx.shadowColor='#00ff41'; ctx.shadowBlur=b;
-    ctx.fillStyle=`rgba(0,255,65,${0.03+(28-b)*0.007})`;
-    ctx.fillText('SKY BATTLE', canvas.width/2, 108);
+    ctx.fillStyle=`rgba(0,255,65,${0.03+(24-b)*0.008})`;
+    ctx.fillText('חיסול משגרים !', canvas.width/2, 100);
   }
-  ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=20;
-  ctx.fillText('SKY BATTLE', canvas.width/2, 108);
+  ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=18;
+  ctx.fillText('חיסול משגרים !', canvas.width/2, 100);
   ctx.shadowBlur=0;
 
-  ctx.font='bold 15px "Courier New"'; ctx.fillStyle='#ff8844';
-  ctx.shadowColor='#ff4400'; ctx.shadowBlur=10;
-  ctx.fillText('BIBI & TRUMP  vs  IRANIAN MISSILE LAUNCHERS', canvas.width/2, 142);
+  ctx.font='bold 13px "Courier New"'; ctx.fillStyle='#ff8844';
+  ctx.shadowColor='#ff4400'; ctx.shadowBlur=8;
+  ctx.fillText('BIBI & TRUMP  vs  IRANIAN MISSILE LAUNCHERS', canvas.width/2, 124);
   ctx.shadowBlur=0;
 
-  ctx.strokeStyle='rgba(0,255,65,0.32)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(110,157); ctx.lineTo(690,157); ctx.stroke();
+  ctx.strokeStyle='rgba(0,255,65,0.30)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(110,136); ctx.lineTo(690,136); ctx.stroke();
   ctx.lineWidth=1;
 
-  // Plane previews
+  // ── Plane previews ──
   ctx.save();
   ctx.globalCompositeOperation='screen';
   if (f35Img.loaded) {
-    ctx.save(); ctx.translate(228,193); ctx.scale(-1,1);
-    ctx.drawImage(f35Img, 0, 0, 148, 58); ctx.restore();
+    ctx.save(); ctx.translate(222,150); ctx.scale(-1,1);
+    ctx.drawImage(f35Img, 0, 0, 140, 52); ctx.restore();
   }
-  if (b1Img.loaded) ctx.drawImage(b1Img, 440, 193, 162, 58);
+  if (b1Img.loaded) ctx.drawImage(b1Img, 450, 150, 152, 52);
   ctx.globalCompositeOperation='source-over';
   ctx.restore();
+  drawIsraelFlag(80 + 140*0.55, 150+52*0.08, 20, 13);
+  drawUSFlag(450 + 152*0.55, 150+52*0.08, 20, 13);
 
   ctx.font='bold 10px "Courier New"'; ctx.textAlign='center';
-  ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=8;
-  ctx.fillText('▲ BIBI F-35  [YOU]', 154, 186);
+  ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=7;
+  ctx.fillText('▲ BIBI F-35  [YOU]', 152, 145);
   ctx.fillStyle='#ffd700'; ctx.shadowColor='#ffd700';
-  ctx.fillText('TRUMP B-1  [ALLY] ▲', 521, 186);
+  ctx.fillText('TRUMP B-1  [ALLY] ▲', 526, 145);
   ctx.shadowBlur=0;
 
-  // Controls box
+  // ── Trump portrait (left) + speech bubble ──
+  if (trump1Img.loaded) {
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(50, 240, 38, 42, 0, 0, Math.PI*2); ctx.clip();
+    ctx.drawImage(trump1Img, 0, Math.floor(trump1Img.naturalHeight*0.08),
+      trump1Img.naturalWidth, trump1Img.naturalHeight*0.92, 12, 198, 76, 84);
+    ctx.restore();
+    ctx.strokeStyle='#ffd700'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(50,240,39,43,0,0,Math.PI*2); ctx.stroke();
+    ctx.lineWidth=1;
+  }
+  // Trump bubble
+  ctx.fillStyle='rgba(255,248,210,0.93)';
+  roundRect(96, 212, 272, 56, 10); ctx.fill();
+  ctx.strokeStyle='#ffd700'; ctx.lineWidth=1.5;
+  roundRect(96, 212, 272, 56, 10); ctx.stroke(); ctx.lineWidth=1;
+  ctx.fillStyle='rgba(255,248,210,0.93)';
+  ctx.beginPath(); ctx.moveTo(96,234); ctx.lineTo(74,241); ctx.lineTo(96,250); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#ffd700'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(96,234); ctx.lineTo(74,241); ctx.lineTo(96,250); ctx.stroke(); ctx.lineWidth=1;
+  ctx.fillStyle='#1a0800'; ctx.font='bold 12px "Courier New"'; ctx.textAlign='center';
+  ctx.fillText('"BIBI, LET\'S DESTROY', 232, 232);
+  ctx.fillText('THESE TOYS!"', 232, 252);
+
+  // ── Bibi portrait (right) + speech bubble ──
+  if (bibi1Img.loaded) {
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(750, 240, 38, 42, 0, 0, Math.PI*2); ctx.clip();
+    ctx.drawImage(bibi1Img, 0, Math.floor(bibi1Img.naturalHeight*0.08),
+      bibi1Img.naturalWidth, bibi1Img.naturalHeight*0.92, 712, 198, 76, 84);
+    ctx.restore();
+    ctx.strokeStyle='#ffd93d'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(750,240,39,43,0,0,Math.PI*2); ctx.stroke();
+    ctx.lineWidth=1;
+  }
+  // Bibi bubble (pointing right toward Bibi)
+  ctx.fillStyle='rgba(210,248,255,0.93)';
+  roundRect(432, 212, 272, 56, 10); ctx.fill();
+  ctx.strokeStyle='#ffd93d'; ctx.lineWidth=1.5;
+  roundRect(432, 212, 272, 56, 10); ctx.stroke(); ctx.lineWidth=1;
+  ctx.fillStyle='rgba(210,248,255,0.93)';
+  ctx.beginPath(); ctx.moveTo(704,234); ctx.lineTo(726,241); ctx.lineTo(704,250); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#ffd93d'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(704,234); ctx.lineTo(726,241); ctx.lineTo(704,250); ctx.stroke(); ctx.lineWidth=1;
+  ctx.fillStyle='#001a20'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+  ctx.fillText('".אמרתי לך', 568, 232);
+  ctx.fillText('!"צעצוע של נייר', 568, 252);
+
+  // ── Info boxes ──
   ctx.fillStyle='rgba(0,35,15,0.75)';
   ctx.strokeStyle='rgba(0,255,65,0.28)'; ctx.lineWidth=1;
-  roundRect(140, 278, 238, 122, 7); ctx.fill(); ctx.stroke();
+  roundRect(140, 286, 232, 110, 7); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#44ff88'; ctx.font='bold 11px "Courier New"'; ctx.textAlign='left';
-  ctx.fillText('◆  CONTROLS', 162, 300);
+  ctx.fillText('◆  CONTROLS', 160, 307);
   ctx.fillStyle='#aaddff';
-  ctx.fillText('← → ↑ ↓    MOVE', 162, 320);
-  ctx.fillText('SPACE        SHOOT', 162, 338);
-  ctx.fillText('ENTER / TAP  START', 162, 356);
+  ctx.fillText('← → ↑ ↓    MOVE', 160, 325);
+  ctx.fillText('SPACE        SHOOT', 160, 342);
+  ctx.fillText('ENTER / TAP  START', 160, 359);
   ctx.fillStyle='#88ccff'; ctx.font='10px "Courier New"';
-  ctx.fillText('☁  FLY into clouds to hide', 162, 374);
-  ctx.fillText('    from upward missiles', 162, 390);
+  ctx.fillText('☁  FLY into clouds to hide', 160, 376);
+  ctx.fillText('    from upward missiles', 160, 390);
 
-  // Mission box
   ctx.fillStyle='rgba(30,5,0,0.75)';
   ctx.strokeStyle='rgba(255,100,0,0.28)'; ctx.lineWidth=1;
-  roundRect(422, 278, 238, 122, 7); ctx.fill(); ctx.stroke();
+  roundRect(428, 286, 232, 110, 7); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#ff8844'; ctx.font='bold 11px "Courier New"'; ctx.textAlign='left';
-  ctx.fillText('◆  MISSION', 444, 300);
+  ctx.fillText('◆  MISSION', 448, 307);
   ctx.fillStyle='#ffaa88';
-  ctx.fillText('DESTROY ALL 32', 444, 320);
-  ctx.fillText('MISSILE LAUNCHERS', 444, 338);
-  ctx.fillText('TRUMP HELPS YOU!', 444, 356);
+  ctx.fillText('DESTROY ALL 32', 448, 325);
+  ctx.fillText('MISSILE LAUNCHERS', 448, 342);
+  ctx.fillText('TRUMP HELPS YOU!', 448, 359);
   ctx.fillStyle='#ff5522'; ctx.font='bold 10px "Courier New"';
-  ctx.fillText('⚠ AVOID UPWARD MISSILES', 444, 374);
+  ctx.fillText('⚠ AVOID UPWARD MISSILES', 448, 376);
   ctx.fillStyle='#88ccff'; ctx.font='10px "Courier New"';
-  ctx.fillText('☁ CLOUDS BLOCK MISSILES', 444, 390);
+  ctx.fillText('☁ CLOUDS BLOCK MISSILES', 448, 390);
 
   if (Math.floor(Date.now()/540)%2===0) {
     ctx.fillStyle='#ffffff'; ctx.font='bold 19px "Courier New"';
     ctx.textAlign='center'; ctx.shadowColor='#ffffff'; ctx.shadowBlur=16;
-    ctx.fillText('►  PRESS ENTER / TAP TO START  ◄', canvas.width/2, 452);
+    ctx.fillText('►  PRESS ENTER / TAP TO START  ◄', canvas.width/2, 442);
     ctx.shadowBlur=0;
   }
 
