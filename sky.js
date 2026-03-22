@@ -127,21 +127,42 @@ function playStartVoices() {
   function speak() {
     const voices = window.speechSynthesis.getVoices();
 
-    const trump = new SpeechSynthesisUtterance("Bibi, let's destroy these toys!");
-    trump.lang = 'en-US'; trump.rate = 0.82; trump.pitch = 0.72; trump.volume = 1;
-    const maleVoice = voices.find(v => v.lang.startsWith('en') && /david|mark|alex|male|guy|fred/i.test(v.name));
-    if (maleVoice) trump.voice = maleVoice;
+    // Pick deepest available male voice for a language prefix
+    function pickVoice(langPrefix) {
+      const pool = voices.filter(v => v.lang.startsWith(langPrefix));
+      return pool.find(v => /male|man|david|mark|alex|guy|fred|jorge|diego|thomas|daniel/i.test(v.name))
+          || pool[0] || null;
+    }
 
-    const bibi = new SpeechSynthesisUtterance('אמרתי לך — צעצוע של נייר!');
-    bibi.lang = 'he-IL'; bibi.rate = 0.88; bibi.pitch = 1.1; bibi.volume = 1;
-    const heVoice = voices.find(v => v.lang.startsWith('he'));
-    if (heVoice) bibi.voice = heVoice;
+    const enVoice = pickVoice('en');
+    const heVoice = pickVoice('he');
 
-    window.speechSynthesis.speak(trump);
-    window.speechSynthesis.speak(bibi);
+    // Trump – deep authoritative English
+    const t = new SpeechSynthesisUtterance("Bibi, let's destroy these toys!");
+    t.lang = 'en-US'; t.rate = 0.78; t.pitch = 0.55; t.volume = 1;
+    if (enVoice) t.voice = enVoice;
+
+    // Bibi – deep authoritative Hebrew
+    const b = new SpeechSynthesisUtterance('כמו שאמרתי — צעצוע של נייר!');
+    b.lang = 'he-IL'; b.rate = 0.82; b.pitch = 0.55; b.volume = 1;
+    if (heVoice) b.voice = heVoice;
+
+    // Trump laughs (deep)
+    const tl = new SpeechSynthesisUtterance('Ha! Ha! Ha! Ha! Ha!');
+    tl.lang = 'en-US'; tl.rate = 0.72; tl.pitch = 0.50; tl.volume = 0.95;
+    if (enVoice) tl.voice = enVoice;
+
+    // Bibi laughs (deep Hebrew)
+    const bl = new SpeechSynthesisUtterance('הא! הא! הא! הא!');
+    bl.lang = 'he-IL'; bl.rate = 0.72; bl.pitch = 0.50; bl.volume = 0.95;
+    if (heVoice) bl.voice = heVoice;
+
+    window.speechSynthesis.speak(t);
+    window.speechSynthesis.speak(b);
+    window.speechSynthesis.speak(tl);
+    window.speechSynthesis.speak(bl);
   }
 
-  // Voices list may not be loaded yet on first call
   if (window.speechSynthesis.getVoices().length > 0) {
     speak();
   } else {
@@ -743,7 +764,7 @@ function drawStartScreen() {
   ctx.strokeStyle='#ffd93d'; ctx.lineWidth=1.5;
   ctx.beginPath(); ctx.moveTo(704,234); ctx.lineTo(726,241); ctx.lineTo(704,250); ctx.stroke(); ctx.lineWidth=1;
   ctx.fillStyle='#001a20'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
-  ctx.fillText('".אמרתי לך', 568, 232);
+  ctx.fillText('"כמו שאמרתי —', 568, 232);
   ctx.fillText('!"צעצוע של נייר', 568, 252);
 
   // ── Info boxes ──
