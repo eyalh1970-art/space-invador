@@ -1141,6 +1141,7 @@ function drawSplashScreen() {
     ctx.fill();
 
     ctx.save();
+    ctx.globalCompositeOperation = 'screen'; // removes black background
     if (p.dir === 1) {
       ctx.translate(p.x + p.w, p.y);
       ctx.scale(-1, 1);
@@ -1148,6 +1149,7 @@ function drawSplashScreen() {
     } else {
       ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
     }
+    ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
   }
 
