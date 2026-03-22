@@ -341,7 +341,7 @@ function speakIntro() {
   else speakHebrew('יאללה, לסיים עם הגרעין!', 0.35);
 }
 function speakLevelWin() {
-  if (currentLevel === 1) speakHebrew('כל הכבוד! קדימה למיצר הורמוז!', 0.4);
+  if (currentLevel === 1) speakHebrew('כל הכבוד! קדימה לחסל את המשגרים!', 0.4);
   else if (currentLevel === 2) speakHebrew('מצוין! קדימה לאתר הגרעין!', 0.4);
 }
 function speakFinalWin() {
@@ -835,7 +835,7 @@ function drawIntroOverlay() {
   ctx.font='bold 34px "Courier New"'; ctx.fillStyle='#ffd93d'; ctx.shadowColor='#ffd93d'; ctx.shadowBlur=24;
   const texts = [
     ['אני מת על קפה ועדיף רותח!'],
-    ['קדימה משחררים את', 'מיצרי הורמוז!'],
+    ['קדימה לחסל', 'את המשגרים!'],
     ['יאללה לסיים עם הגרעין!'],
   ];
   const lines = texts[currentLevel-1];
@@ -996,7 +996,7 @@ function drawLevelCompleteScreen() {
   ctx.fillText(`LEVEL ${currentLevel} COMPLETE!`, canvas.width/2, 160);
   ctx.shadowBlur=0;
 
-  const nextNames = ['מיצר הורמוז','הגרעין ☢'];
+  const nextNames = [window.IDV_CHAIN ? 'חיסול משגרים ☁' : 'מיצר הורמוז','הגרעין ☢'];
   ctx.font='bold 26px "Courier New"'; ctx.fillStyle='#ffd93d';
   ctx.fillText(`NEXT: LVL ${currentLevel+1} – ${nextNames[currentLevel-1]}`, canvas.width/2, 240);
 
