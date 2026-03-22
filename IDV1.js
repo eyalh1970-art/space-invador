@@ -983,8 +983,8 @@ function drawStartScreen() {
     ctx.fillText('PRESS  ENTER  /  TAP  TO  START', canvas.width/2, 430);
     ctx.shadowBlur=0;
   }
-  ctx.fillStyle='#333'; ctx.font='11px "Courier New"';
-  ctx.fillText('IDV – Israel Defense Venture', canvas.width/2, 570);
+  ctx.font = '10px "Courier New"'; ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.textAlign = 'center';
+  ctx.fillText('© 2025 IDV – Israel Defense Venture  |  All rights reserved', canvas.width/2, 616);
 }
 
 function drawLevelCompleteScreen() {
@@ -1206,7 +1206,11 @@ function drawSplashScreen() {
   if (Math.floor(t / 520) % 2 === 0) {
     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 21px "Courier New"';
     ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12;
-    ctx.fillText('PRESS  ENTER  /  TAP  TO  ENTER', canvas.width / 2, 600);
+    ctx.fillText('PRESS  ENTER  /  TAP  TO  ENTER', canvas.width / 2, 590);
     ctx.shadowBlur = 0;
   }
+
+  // ── Copyright ────────────────────────────────────────────────
+  ctx.font = '10px "Courier New"'; ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.textAlign = 'center';
+  ctx.fillText('© 2025 IDV – Israel Defense Venture  |  All rights reserved', canvas.width / 2, 616);
 }
