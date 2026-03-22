@@ -898,27 +898,83 @@ function drawDancingPeople() {
 
 // ── SCREENS ───────────────────────────────────────────────────
 function drawStartScreen() {
+  drawStars();
   ctx.textAlign='center';
-  ctx.font='bold 80px "Courier New"'; ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=30;
-  ctx.fillText('IDV', canvas.width/2, 120);
-  ctx.shadowBlur=0;
-  ctx.font='bold 22px "Courier New"'; ctx.fillStyle='#ffd93d';
-  ctx.fillText('SPACE INVADERS – 3 LEVELS', canvas.width/2, 160);
 
-  const lvls=[['LVL 1','המקלטים','#ff6b6b'],['LVL 2','מיצר הורמוז','#ffd93d'],['LVL 3','הגרעין ☢','#00e5ff']];
-  lvls.forEach(([num,name,color],i)=>{
-    ctx.fillStyle=color; ctx.font='bold 16px "Courier New"';
-    ctx.fillText(`${num}: ${name}`, 200+i*200, 220);
+  // Title
+  ctx.font='bold 72px "Courier New"'; ctx.fillStyle='#00ff41'; ctx.shadowColor='#00ff41'; ctx.shadowBlur=30;
+  ctx.fillText('IDV', canvas.width/2, 80);
+  ctx.shadowBlur=0;
+  ctx.font='bold 18px "Courier New"'; ctx.fillStyle='#ffd93d';
+  ctx.fillText('SPACE INVADERS – 3 LEVELS', canvas.width/2, 110);
+
+  // Separator
+  ctx.strokeStyle='#00ff4144'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(60,124); ctx.lineTo(740,124); ctx.stroke(); ctx.lineWidth=1;
+
+  // ── Enemy score table with face images ───────────────────
+  const enemies = [
+    { img: sinuarImg,  label: 'SINUAR',   pts: 10,  color: C.enemy3 },
+    { img: iranImg,    label: 'KHAMENEI', pts: 50,  color: C.enemy1 },
+    { img: lebanonImg, label: 'NASRALLAH',pts: 20,  color: C.enemy2 },
+  ];
+  // Sort by points desc: Khamenei 50, Nasrallah 20, Sinuar 10
+  const sorted = [
+    { img: iranImg,    label: 'KHAMENEI',  pts: 50, color: C.enemy1 },
+    { img: lebanonImg, label: 'NASRALLAH', pts: 20, color: C.enemy2 },
+    { img: sinuarImg,  label: 'SINUAR',    pts: 10, color: C.enemy3 },
+  ];
+  const faceSize = 64, rowY = 200, colSpacing = 220;
+  const startX = canvas.width/2 - colSpacing;
+
+  ctx.font='bold 13px "Courier New"'; ctx.fillStyle='#aaa';
+  ctx.fillText('ENEMY  SCORE  TABLE', canvas.width/2, 150);
+
+  sorted.forEach(({ img, label, pts, color }, i) => {
+    const cx = startX + i * colSpacing;
+    // Face
+    if (img.loaded) {
+      ctx.save();
+      ctx.shadowColor = color; ctx.shadowBlur = 14;
+      ctx.drawImage(img, cx - faceSize/2, rowY - faceSize/2, faceSize, faceSize);
+      ctx.shadowBlur = 0; ctx.restore();
+    } else {
+      ctx.fillStyle = color;
+      ctx.fillRect(cx - faceSize/2, rowY - faceSize/2, faceSize, faceSize);
+    }
+    // Label
+    ctx.font='bold 11px "Courier New"'; ctx.fillStyle = color; ctx.textAlign='center';
+    ctx.fillText(label, cx, rowY + faceSize/2 + 16);
+    // Points — bigger for higher score
+    const ptSize = pts >= 50 ? 20 : pts >= 20 ? 16 : 13;
+    ctx.font=`bold ${ptSize}px "Courier New"`; ctx.fillStyle='#ffffff';
+    ctx.shadowColor = color; ctx.shadowBlur = 10;
+    ctx.fillText(`= ${pts} PTS`, cx, rowY + faceSize/2 + 36);
+    ctx.shadowBlur = 0;
+    // Crown for highest
+    if (pts === 50) {
+      ctx.font='22px serif'; ctx.fillText('👑', cx, rowY - faceSize/2 - 8);
+    }
   });
 
-  ctx.fillStyle='#888'; ctx.font='16px "Courier New"';
-  ctx.fillText('← →  MOVE      SPACE  SHOOT', canvas.width/2, 290);
+  // Levels list
+  ctx.textAlign='center';
+  const lvls=[['LVL 1','המקלטים','#ff6b6b'],['LVL 2','מיצר הורמוז','#ffd93d'],['LVL 3','הגרעין ☢','#00e5ff']];
+  lvls.forEach(([num,name,color],i)=>{
+    ctx.fillStyle=color; ctx.font='bold 14px "Courier New"';
+    ctx.fillText(`${num}: ${name}`, 180+i*220, 330);
+  });
+
+  ctx.fillStyle='#666'; ctx.font='14px "Courier New"';
+  ctx.fillText('← →  MOVE      SPACE  SHOOT', canvas.width/2, 368);
 
   if(Math.floor(Date.now()/550)%2===0){
-    ctx.fillStyle='#ffffff'; ctx.font='bold 24px "Courier New"';
-    ctx.fillText('PRESS  ENTER  /  TAP  TO  START', canvas.width/2, 380);
+    ctx.fillStyle='#ffffff'; ctx.font='bold 22px "Courier New"';
+    ctx.shadowColor='#ffffff'; ctx.shadowBlur=10;
+    ctx.fillText('PRESS  ENTER  /  TAP  TO  START', canvas.width/2, 430);
+    ctx.shadowBlur=0;
   }
-  ctx.fillStyle='#444'; ctx.font='12px "Courier New"';
+  ctx.fillStyle='#333'; ctx.font='11px "Courier New"';
   ctx.fillText('IDV – Israel Defense Venture', canvas.width/2, 570);
 }
 
