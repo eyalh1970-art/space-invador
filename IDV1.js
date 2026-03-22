@@ -179,96 +179,145 @@ function stopSplashMusic() {
 function scheduleSplashMusic(t0) {
   if (!splashMusicOn) return;
   const ac = getAudioCtx();
-  const bpm = 136, b = 60 / bpm; // ~0.441s per beat
-  const TOTAL_BEATS = 12;
+  // ── Epic War March — C minor, 118 BPM, 16 beats (4 bars) ──
+  const bpm = 118, b = 60 / bpm;
+  const BEATS = 16;
 
-  function note(freq, start, dur, type, vol) {
-    if (freq <= 0) return;
+  // ── Helpers ──────────────────────────────────────────────
+  function brass(freq, start, dur, vol) {
+    // Detuned sawtooth pair for fat brass sound
+    [0, 4].forEach(detune => {
+      const osc = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+      osc.type = 'sawtooth'; osc.frequency.value = freq * Math.pow(2, detune/1200);
+      f.type = 'lowpass'; f.frequency.value = 2800; f.Q.value = 1.2;
+      osc.connect(f); f.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.001, start);
+      g.gain.linearRampToValueAtTime(vol * 0.5, start + 0.04);
+      g.gain.setValueAtTime(vol * 0.5, start + dur - 0.06);
+      g.gain.linearRampToValueAtTime(0.001, start + dur);
+      osc.start(start); osc.stop(start + dur + 0.05);
+    });
+  }
+
+  function pad(freq, start, dur, vol) {
     const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = type; osc.frequency.value = freq;
+    osc.type = 'sine'; osc.frequency.value = freq;
     osc.connect(g); g.connect(ac.destination);
     g.gain.setValueAtTime(0.001, start);
-    g.gain.linearRampToValueAtTime(vol, start + 0.02);
-    g.gain.setValueAtTime(vol, start + dur - 0.05);
+    g.gain.linearRampToValueAtTime(vol, start + 0.3);
+    g.gain.setValueAtTime(vol, start + dur - 0.3);
+    g.gain.linearRampToValueAtTime(0.001, start + dur);
+    osc.start(start); osc.stop(start + dur + 0.1);
+  }
+
+  function deepBass(freq, start, dur) {
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = 'sawtooth'; osc.frequency.value = freq;
+    osc.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.linearRampToValueAtTime(0.30, start + 0.03);
+    g.gain.setValueAtTime(0.28, start + dur - 0.05);
     g.gain.linearRampToValueAtTime(0.001, start + dur);
     osc.start(start); osc.stop(start + dur + 0.05);
   }
-  function kick(t) {
+
+  function taiko(t) {  // big war drum hit
     const osc = ac.createOscillator(), g = ac.createGain();
     osc.type = 'sine'; osc.connect(g); g.connect(ac.destination);
-    osc.frequency.setValueAtTime(165, t);
-    osc.frequency.exponentialRampToValueAtTime(28, t + 0.22);
-    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-    osc.start(t); osc.stop(t + 0.23);
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.exponentialRampToValueAtTime(22, t + 0.35);
+    g.gain.setValueAtTime(1.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.start(t); osc.stop(t + 0.36);
   }
-  function snare(t) {
-    const len = Math.floor(ac.sampleRate * 0.14);
+
+  function snare(t, vol) {
+    const len = Math.floor(ac.sampleRate * 0.18);
     const buf = ac.createBuffer(1, len, ac.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    const src = ac.createBufferSource(), g = ac.createGain();
-    src.buffer = buf; src.connect(g); g.connect(ac.destination);
-    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    const src = ac.createBufferSource(), lp = ac.createBiquadFilter(), g = ac.createGain();
+    lp.type = 'bandpass'; lp.frequency.value = 3000; lp.Q.value = 0.8;
+    src.buffer = buf; src.connect(lp); lp.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(vol || 0.55, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
     src.start(t);
   }
-  function hihat(t, vol) {
-    const len = Math.floor(ac.sampleRate * 0.04);
+
+  function tick(t) {  // snare ghost note
+    const len = Math.floor(ac.sampleRate * 0.06);
     const buf = ac.createBuffer(1, len, ac.sampleRate);
     const d = buf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-    f.type = 'highpass'; f.frequency.value = 7500;
-    src.buffer = buf; src.connect(f); f.connect(g); g.connect(ac.destination);
-    g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    const src = ac.createBufferSource(), hp = ac.createBiquadFilter(), g = ac.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 6000;
+    src.buffer = buf; src.connect(hp); hp.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.10, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
     src.start(t);
   }
 
-  // ── DRUMS (12 beats = 3 bars of 4/4) ──
-  for (let i = 0; i < TOTAL_BEATS; i++) {
-    const bt = t0 + i * b;
-    if (i % 4 === 0 || i % 4 === 2) kick(bt);
-    if (i % 4 === 1 || i % 4 === 3) snare(bt);
-    hihat(bt, 0.14);
-    hihat(bt + b * 0.5, 0.09);
+  // ── ATMOSPHERE PAD (C minor chord, whole loop) ────────────
+  // C minor: C3, Eb3, G3
+  pad(130.81, t0, BEATS*b, 0.08);   // C3
+  pad(155.56, t0, BEATS*b, 0.06);   // Eb3
+  pad(196.00, t0, BEATS*b, 0.05);   // G3
+
+  // ── DRUMS ────────────────────────────────────────────────
+  // Military march feel: taiko on 1 of each bar, snare on 2&4, ghost 8ths
+  for (let bar = 0; bar < 4; bar++) {
+    const bt = t0 + bar * 4 * b;
+    taiko(bt);                          // beat 1: big war drum
+    snare(bt + 1*b);                    // beat 2
+    taiko(bt + 2*b);                    // beat 3: second hit
+    snare(bt + 3*b);                    // beat 4
+    // 8th-note ghost ticks
+    for (let e = 0; e < 8; e++) tick(bt + e * b * 0.5);
   }
 
-  // ── BASS (C / E / G pattern) ──
-  const bassSeq = [130.81,0,130.81,0, 164.81,130.81,0,164.81, 196.00,0,196.00,0];
-  for (let i = 0; i < TOTAL_BEATS; i++) {
-    if (bassSeq[i] > 0) note(bassSeq[i], t0 + i * b, b * 0.78, 'sawtooth', 0.22);
-  }
+  // ── BASS LINE (C minor, powerful) ────────────────────────
+  // Bar 1: C2, C2 | Bar 2: G1, Bb1 | Bar 3: Ab1, Eb2 | Bar 4: G1, G1
+  const bassLine = [
+    [65.41, 2*b], [65.41, 2*b],   // bar1: C2
+    [49.00, 2*b], [58.27, 2*b],   // bar2: G1, Bb1
+    [51.91, 2*b], [77.78, 2*b],   // bar3: Ab1, Eb2
+    [49.00, 2*b], [49.00, 2*b],   // bar4: G1 (tension)
+  ];
+  let bt = t0;
+  for (const [f, dur] of bassLine) { deepBass(f, bt, dur * 0.88); bt += dur; }
 
-  // ── MELODY: Rocky "Gonna Fly Now" fanfare ──
-  // Bar 1 (beats 0–3): Rising arpeggio C5→E5→G5→C6 (held)
-  note(523.25, t0 + 0.00*b, 0.22*b, 'square', 0.32);   // C5
-  note(659.25, t0 + 0.25*b, 0.22*b, 'square', 0.32);   // E5
-  note(783.99, t0 + 0.50*b, 0.22*b, 'square', 0.32);   // G5
-  note(1046.50, t0 + 0.75*b, 1.70*b, 'square', 0.42);  // C6 held
-  note(880.00, t0 + 2.75*b, 0.44*b, 'square', 0.30);   // A5
-  note(783.99, t0 + 3.25*b, 0.60*b, 'square', 0.28);   // G5
+  // ── BRASS MELODY (C minor heroic fanfare) ─────────────────
+  // Bar 1 (0–4): Powerful rising minor arpeggio
+  brass(261.63, t0 + 0.00*b, 0.40*b, 0.38);  // C4
+  brass(311.13, t0 + 0.50*b, 0.40*b, 0.38);  // Eb4
+  brass(392.00, t0 + 1.00*b, 0.40*b, 0.40);  // G4
+  brass(523.25, t0 + 1.50*b, 2.20*b, 0.48);  // C5 held — big hit
 
-  // Bar 2 (beats 4–7): Repeat arpeggio — slightly higher energy
-  note(523.25, t0 + 4.00*b, 0.22*b, 'square', 0.34);
-  note(659.25, t0 + 4.25*b, 0.22*b, 'square', 0.34);
-  note(783.99, t0 + 4.50*b, 0.22*b, 'square', 0.34);
-  note(1046.50, t0 + 4.75*b, 2.00*b, 'square', 0.44);  // C6 even longer
-  note(880.00, t0 + 7.00*b, 0.48*b, 'square', 0.32);   // A5
+  // Bar 2 (4–8): Heroic answering phrase
+  brass(523.25, t0 + 4.00*b, 0.45*b, 0.40);  // C5
+  brass(587.33, t0 + 4.50*b, 0.45*b, 0.40);  // D5
+  brass(622.25, t0 + 5.00*b, 0.45*b, 0.42);  // Eb5
+  brass(698.46, t0 + 5.50*b, 0.45*b, 0.44);  // F5
+  brass(783.99, t0 + 6.00*b, 1.70*b, 0.50);  // G5 held — climax approach
 
-  // Bar 3 (beats 8–11): Ascending climax run → triumphant E6
-  note(880.00,  t0 +  8.00*b, 0.44*b, 'square', 0.34); // A5
-  note(987.77,  t0 +  8.50*b, 0.44*b, 'square', 0.35); // B5
-  note(1046.50, t0 +  9.00*b, 0.44*b, 'square', 0.37); // C6
-  note(1174.66, t0 +  9.50*b, 0.44*b, 'square', 0.38); // D6
-  note(1318.51, t0 + 10.00*b, 1.75*b, 'square', 0.44); // E6 ★ triumphant peak
-  note(1046.50, t0 + 11.50*b, 0.38*b, 'square', 0.30); // C6 resolve
+  // Bar 3 (8–12): Powerful ascending war cry
+  brass(783.99, t0 +  8.00*b, 0.40*b, 0.45);  // G5
+  brass(880.00, t0 +  8.50*b, 0.40*b, 0.45);  // A5
+  brass(932.33, t0 +  9.00*b, 0.40*b, 0.46);  // Bb5
+  brass(1046.50,t0 +  9.50*b, 2.20*b, 0.54);  // C6 ★ PEAK
 
-  // Harmony (lower octave support)
-  note(261.63, t0 + 0.75*b, 1.70*b, 'sine', 0.14);     // C4
-  note(523.25, t0 + 4.75*b, 2.00*b, 'sine', 0.14);     // C5
-  note(659.25, t0 + 10.00*b, 1.75*b, 'sine', 0.14);    // E5
+  // Bar 4 (12–16): Resolution / tension before loop
+  brass(932.33, t0 + 12.00*b, 0.45*b, 0.44);  // Bb5
+  brass(783.99, t0 + 12.50*b, 0.45*b, 0.42);  // G5
+  brass(698.46, t0 + 13.00*b, 0.45*b, 0.40);  // F5
+  brass(622.25, t0 + 13.50*b, 0.45*b, 0.38);  // Eb5
+  brass(523.25, t0 + 14.00*b, 1.80*b, 0.44);  // C5 — resolve
 
-  const loopMs = TOTAL_BEATS * b * 1000;
-  splashMusicLoop = setTimeout(() => scheduleSplashMusic(ac.currentTime + 0.02), loopMs - 60);
+  // ── HARMONY (brass 5ths under melody) ────────────────────
+  pad(196.00, t0 + 1.50*b, 2.20*b, 0.12);  // G3 under C5
+  pad(392.00, t0 + 6.00*b, 1.70*b, 0.11);  // G4 under G5
+  pad(392.00, t0 + 9.50*b, 2.20*b, 0.13);  // G4 under C6
+
+  const loopMs = BEATS * b * 1000;
+  splashMusicLoop = setTimeout(() => scheduleSplashMusic(ac.currentTime + 0.02), loopMs - 50);
 }
 
 // ── SPLASH PLANES ─────────────────────────────────────────────
