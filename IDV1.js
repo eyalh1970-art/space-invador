@@ -1068,6 +1068,20 @@ function drawImageCover(img, x, y, w, h) {
   ctx.drawImage(img, ox, oy, sw, sh);
   ctx.restore();
 }
+// Draw portrait with top crop (hides watermark/text at top of image)
+function drawPortrait(img, x, y, w, h, cropTop) {
+  const iW = img.naturalWidth || img.width, iH = img.naturalHeight || img.height;
+  if (!iW || !iH) { ctx.drawImage(img, x, y, w, h); return; }
+  const sy = Math.floor(iH * (cropTop || 0.10));  // skip top 10%
+  const sh = iH - sy;
+  const scale = Math.max(w / iW, h / sh);
+  const dw = iW * scale, dh = sh * scale;
+  const ox = x + (w - dw) / 2, oy = y + (h - dh) / 2;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.drawImage(img, 0, sy, iW, sh, ox, oy, dw, dh);
+  ctx.restore();
+}
 
 function updateSplashPlanes() {
   for (const p of splashPlanes) {
@@ -1084,18 +1098,18 @@ function drawSplashScreen() {
   // ── Side portraits (cover-fit, full canvas height) ─────────
   const prtW = 205, prtH = canvas.height, prtY = 0;
 
-  // Trump – left
+  // Trump – left (crop top to hide watermark)
   if (trump1Img.loaded) {
     ctx.save();
     ctx.shadowColor = '#ff8c00'; ctx.shadowBlur = 40;
-    drawImageCover(trump1Img, 0, prtY, prtW, prtH);
+    drawPortrait(trump1Img, 0, prtY, prtW, prtH, 0.10);
     ctx.shadowBlur = 0; ctx.restore();
   }
-  // Bibi – right
+  // Bibi – right (crop top to hide watermark)
   if (bibi1Img.loaded) {
     ctx.save();
     ctx.shadowColor = '#00ff41'; ctx.shadowBlur = 40;
-    drawImageCover(bibi1Img, canvas.width - prtW, prtY, prtW, prtH);
+    drawPortrait(bibi1Img, canvas.width - prtW, prtY, prtW, prtH, 0.10);
     ctx.shadowBlur = 0; ctx.restore();
   }
 
