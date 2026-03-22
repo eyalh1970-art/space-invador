@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "routes": [
+    { "src": "/sky", "dest": "/sky.html" },
+    { "src": "/sky.html", "dest": "/sky.html" }
+  ]
 }
