@@ -273,9 +273,9 @@ function scheduleSplashMusic(t0) {
 
 // ── SPLASH PLANES ─────────────────────────────────────────────
 const splashPlanes = [
-  { get img(){ return f35Img; }, x: -130, y: 162, speed: 3.2, w: 118, h: 46, dir:  1 },
-  { get img(){ return f15Img; }, x: 1100, y: 216, speed: 2.4, w: 102, h: 40, dir: -1 },
-  { get img(){ return b1Img;  }, x:  940, y: 185, speed: 2.1, w: 155, h: 52, dir: -1 },
+  { get img(){ return f35Img; }, x:  940, y: 162, speed: 3.2, w: 118, h: 46, dir: -1 },
+  { get img(){ return f15Img; }, x: -130, y: 216, speed: 2.4, w: 102, h: 40, dir:  1 },
+  { get img(){ return b1Img;  }, x: -220, y: 185, speed: 2.1, w: 155, h: 52, dir:  1 },
 ];
 
 // ── STARFIELD ─────────────────────────────────────────────────
@@ -1074,12 +1074,22 @@ function drawSplashScreen() {
   // ── Aircraft ────────────────────────────────────────────────
   for (const p of splashPlanes) {
     if (!p.img || !p.img.loaded) continue;
-    // Engine afterburner glow
-    const glowX = p.dir === 1 ? p.x - 4 : p.x + p.w + 4;
-    ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 22;
-    ctx.fillStyle = 'rgba(60,160,255,0.55)';
-    ctx.beginPath(); ctx.ellipse(glowX, p.y + p.h / 2, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
+    const cy = p.y + p.h / 2;
+    // Jet contrail — drawn behind the plane
+    const trailStart = p.dir === 1 ? p.x - 1 : p.x + p.w + 1;
+    const trailLen = 180;
+    const trailEnd = trailStart - p.dir * trailLen;
+    const grad = ctx.createLinearGradient(trailStart, cy, trailEnd, cy);
+    grad.addColorStop(0, 'rgba(255,255,255,0.55)');
+    grad.addColorStop(0.3, 'rgba(200,230,255,0.25)');
+    grad.addColorStop(1, 'rgba(200,230,255,0)');
+    ctx.beginPath();
+    ctx.moveTo(trailStart, cy - 3);
+    ctx.lineTo(trailEnd,   cy);
+    ctx.lineTo(trailStart, cy + 3);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
 
     ctx.save();
     if (p.dir === -1) {
