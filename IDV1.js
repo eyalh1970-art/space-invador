@@ -162,11 +162,120 @@ const TRUMP_SHOOT_INTERVAL = 100;
 const SHIELD_COUNT = 4, PX = 4;
 let shields = [];
 
+// ── SPLASH MUSIC ──────────────────────────────────────────────
+let splashMusicOn = false, splashMusicLoop = null;
+
+function startSplashMusic() {
+  if (splashMusicOn) return;
+  splashMusicOn = true;
+  const ac = getAudioCtx();
+  if (ac.state === 'suspended') ac.resume();
+  scheduleSplashMusic(ac.currentTime + 0.05);
+}
+function stopSplashMusic() {
+  splashMusicOn = false;
+  if (splashMusicLoop) { clearTimeout(splashMusicLoop); splashMusicLoop = null; }
+}
+function scheduleSplashMusic(t0) {
+  if (!splashMusicOn) return;
+  const ac = getAudioCtx();
+  const bpm = 136, b = 60 / bpm; // ~0.441s per beat
+  const TOTAL_BEATS = 12;
+
+  function note(freq, start, dur, type, vol) {
+    if (freq <= 0) return;
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.linearRampToValueAtTime(vol, start + 0.02);
+    g.gain.setValueAtTime(vol, start + dur - 0.05);
+    g.gain.linearRampToValueAtTime(0.001, start + dur);
+    osc.start(start); osc.stop(start + dur + 0.05);
+  }
+  function kick(t) {
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = 'sine'; osc.connect(g); g.connect(ac.destination);
+    osc.frequency.setValueAtTime(165, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t + 0.22);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.start(t); osc.stop(t + 0.23);
+  }
+  function snare(t) {
+    const len = Math.floor(ac.sampleRate * 0.14);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = buf; src.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    src.start(t);
+  }
+  function hihat(t, vol) {
+    const len = Math.floor(ac.sampleRate * 0.04);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = 'highpass'; f.frequency.value = 7500;
+    src.buffer = buf; src.connect(f); f.connect(g); g.connect(ac.destination);
+    g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    src.start(t);
+  }
+
+  // ── DRUMS (12 beats = 3 bars of 4/4) ──
+  for (let i = 0; i < TOTAL_BEATS; i++) {
+    const bt = t0 + i * b;
+    if (i % 4 === 0 || i % 4 === 2) kick(bt);
+    if (i % 4 === 1 || i % 4 === 3) snare(bt);
+    hihat(bt, 0.14);
+    hihat(bt + b * 0.5, 0.09);
+  }
+
+  // ── BASS (C / E / G pattern) ──
+  const bassSeq = [130.81,0,130.81,0, 164.81,130.81,0,164.81, 196.00,0,196.00,0];
+  for (let i = 0; i < TOTAL_BEATS; i++) {
+    if (bassSeq[i] > 0) note(bassSeq[i], t0 + i * b, b * 0.78, 'sawtooth', 0.22);
+  }
+
+  // ── MELODY: Rocky "Gonna Fly Now" fanfare ──
+  // Bar 1 (beats 0–3): Rising arpeggio C5→E5→G5→C6 (held)
+  note(523.25, t0 + 0.00*b, 0.22*b, 'square', 0.32);   // C5
+  note(659.25, t0 + 0.25*b, 0.22*b, 'square', 0.32);   // E5
+  note(783.99, t0 + 0.50*b, 0.22*b, 'square', 0.32);   // G5
+  note(1046.50, t0 + 0.75*b, 1.70*b, 'square', 0.42);  // C6 held
+  note(880.00, t0 + 2.75*b, 0.44*b, 'square', 0.30);   // A5
+  note(783.99, t0 + 3.25*b, 0.60*b, 'square', 0.28);   // G5
+
+  // Bar 2 (beats 4–7): Repeat arpeggio — slightly higher energy
+  note(523.25, t0 + 4.00*b, 0.22*b, 'square', 0.34);
+  note(659.25, t0 + 4.25*b, 0.22*b, 'square', 0.34);
+  note(783.99, t0 + 4.50*b, 0.22*b, 'square', 0.34);
+  note(1046.50, t0 + 4.75*b, 2.00*b, 'square', 0.44);  // C6 even longer
+  note(880.00, t0 + 7.00*b, 0.48*b, 'square', 0.32);   // A5
+
+  // Bar 3 (beats 8–11): Ascending climax run → triumphant E6
+  note(880.00,  t0 +  8.00*b, 0.44*b, 'square', 0.34); // A5
+  note(987.77,  t0 +  8.50*b, 0.44*b, 'square', 0.35); // B5
+  note(1046.50, t0 +  9.00*b, 0.44*b, 'square', 0.37); // C6
+  note(1174.66, t0 +  9.50*b, 0.44*b, 'square', 0.38); // D6
+  note(1318.51, t0 + 10.00*b, 1.75*b, 'square', 0.44); // E6 ★ triumphant peak
+  note(1046.50, t0 + 11.50*b, 0.38*b, 'square', 0.30); // C6 resolve
+
+  // Harmony (lower octave support)
+  note(261.63, t0 + 0.75*b, 1.70*b, 'sine', 0.14);     // C4
+  note(523.25, t0 + 4.75*b, 2.00*b, 'sine', 0.14);     // C5
+  note(659.25, t0 + 10.00*b, 1.75*b, 'sine', 0.14);    // E5
+
+  const loopMs = TOTAL_BEATS * b * 1000;
+  splashMusicLoop = setTimeout(() => scheduleSplashMusic(ac.currentTime + 0.02), loopMs - 60);
+}
+
 // ── SPLASH PLANES ─────────────────────────────────────────────
 const splashPlanes = [
-  { get img(){ return f35Img; }, x:  940, y: 162, speed: 3.2, w: 118, h: 46, dir: -1 },
+  { get img(){ return f35Img; }, x: -130, y: 162, speed: 3.2, w: 118, h: 46, dir:  1 },
   { get img(){ return f15Img; }, x: 1100, y: 216, speed: 2.4, w: 102, h: 40, dir: -1 },
-  { get img(){ return b1Img;  }, x: -220, y: 185, speed: 2.1, w: 155, h: 52, dir:  1 },
+  { get img(){ return b1Img;  }, x:  940, y: 185, speed: 2.1, w: 155, h: 52, dir: -1 },
 ];
 
 // ── STARFIELD ─────────────────────────────────────────────────
@@ -249,7 +358,7 @@ function speakUFOHit() {
 
 // ── GAME FLOW ─────────────────────────────────────────────────
 function handleStart() {
-  if (gameState === 'splash') { gameState = 'start'; return; }
+  if (gameState === 'splash') { startSplashMusic(); gameState = 'start'; return; }
   if (gameState === 'start' || gameState === 'gameover') {
     currentLevel = 1; score = 0; startLevel();
   } else if (gameState === 'levelcomplete') {
@@ -261,6 +370,7 @@ function handleStart() {
 }
 
 function startLevel() {
+  stopSplashMusic();
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
