@@ -22,7 +22,7 @@ const sShipImg   = loadImg('S-Ship.jpeg');
 const mShipImg   = loadImg('M-ship.jpeg');
 const bShipImg   = loadImg('B-ship.jpeg');
 const trumpImg   = loadImg('trump2.jpg');     // Trump v2
-const nuclearImg = loadImg('nuclear.png');
+const nuclearImg = loadImg('nuclear2.jpg');
 // ── SPLASH SCREEN IMAGES ────────────────────────────────────
 const bibi1Img  = loadImg('Bibi1.jpg');
 const trump1Img = loadImg('Trump1.jpg');
@@ -893,6 +893,19 @@ canvas.addEventListener('click', ()=>handleStart());
 gameLoop();
 
 // ── SPLASH SCREEN ─────────────────────────────────────────────
+// Draw image with object-fit: cover (no distortion, fills target rect)
+function drawImageCover(img, x, y, w, h) {
+  const iW = img.naturalWidth || img.width, iH = img.naturalHeight || img.height;
+  if (!iW || !iH) { ctx.drawImage(img, x, y, w, h); return; }
+  const scale = Math.max(w / iW, h / iH);
+  const sw = iW * scale, sh = iH * scale;
+  const ox = x + (w - sw) / 2, oy = y + (h - sh) / 2;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.drawImage(img, ox, oy, sw, sh);
+  ctx.restore();
+}
+
 function updateSplashPlanes() {
   for (const p of splashPlanes) {
     p.x += p.speed * p.dir;
@@ -905,21 +918,21 @@ function drawSplashScreen() {
   const t = Date.now();
   drawStars();
 
-  // ── Side portraits ──────────────────────────────────────────
-  const prtW = 200, prtH = 560, prtY = 30;
+  // ── Side portraits (cover-fit, full canvas height) ─────────
+  const prtW = 205, prtH = canvas.height, prtY = 0;
 
   // Trump – left
   if (trump1Img.loaded) {
     ctx.save();
     ctx.shadowColor = '#ff8c00'; ctx.shadowBlur = 40;
-    ctx.drawImage(trump1Img, 0, prtY, prtW, prtH);
+    drawImageCover(trump1Img, 0, prtY, prtW, prtH);
     ctx.shadowBlur = 0; ctx.restore();
   }
   // Bibi – right
   if (bibi1Img.loaded) {
     ctx.save();
     ctx.shadowColor = '#00ff41'; ctx.shadowBlur = 40;
-    ctx.drawImage(bibi1Img, canvas.width - prtW, prtY, prtW, prtH);
+    drawImageCover(bibi1Img, canvas.width - prtW, prtY, prtW, prtH);
     ctx.shadowBlur = 0; ctx.restore();
   }
 
