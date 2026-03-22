@@ -164,9 +164,9 @@ let shields = [];
 
 // ── SPLASH PLANES ─────────────────────────────────────────────
 const splashPlanes = [
-  { get img(){ return f35Img; }, x: -130, y: 162, speed: 3.2, w: 118, h: 46, dir:  1 },
-  { get img(){ return f15Img; }, x: -340, y: 216, speed: 2.4, w: 102, h: 40, dir:  1 },
-  { get img(){ return b1Img;  }, x:  940, y: 185, speed: 2.1, w: 155, h: 52, dir: -1 },
+  { get img(){ return f35Img; }, x:  940, y: 162, speed: 3.2, w: 118, h: 46, dir: -1 },
+  { get img(){ return f15Img; }, x: 1100, y: 216, speed: 2.4, w: 102, h: 40, dir: -1 },
+  { get img(){ return b1Img;  }, x: -220, y: 185, speed: 2.1, w: 155, h: 52, dir:  1 },
 ];
 
 // ── STARFIELD ─────────────────────────────────────────────────
