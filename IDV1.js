@@ -359,6 +359,7 @@ function handleStart() {
   if (gameState === 'start' || gameState === 'gameover') {
     currentLevel = 1; score = 0; startLevel();
   } else if (gameState === 'levelcomplete') {
+    if (window.IDV_CHAIN && currentLevel === 1) { location.href = 'IDV.html?l=sky'; return; }
     currentLevel++;
     startLevel();
   } else if (gameState === 'win') {
